@@ -4,5 +4,6 @@
 *.npy
 *.pdf
 *.png
+*.gif
 config.py
 data
