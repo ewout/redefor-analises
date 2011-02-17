@@ -1,0 +1,8 @@
+*~
+*.py[co]
+*.u1conflict*
+*.npy
+*.pdf
+*.png
+config.py
+data
