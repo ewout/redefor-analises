@@ -16,7 +16,7 @@ def loaddata(query,from_cache=True):
         except IOError as msg:
             print msg
             
-    db = mysql.connect(user=config.user,passwd=config.passwd,db=config.db)
+    db = mysql.connect(host=config.host,user=config.user,passwd=config.passwd,db=config.db)
     c = db.cursor()
     c.execute(query)
     results = c.fetchall()
