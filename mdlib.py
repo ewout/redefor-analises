@@ -86,3 +86,29 @@ def week_where(startweek = 1, endweek = 10,timeexpr = 'timemodified'):
     start = day0 + (startweek-1)*3600*24*7
     end = start + (endweek)*3600*24*7
     return '%s between %s and %s' % (timeexpr,start,end)
+
+def dedica(inativ = 30, userid = 16, startweek = 1, endweek = 10):
+
+	inativsec = inativ*60
+
+	query = 'select time from mdl_log where '
+	query += week_where(startweek, endweek, 'time')
+	query += 'and userid = %s order by time asc' % userid
+	X = list(loaddata(query))
+
+	t = []
+	for z in X:
+		t.append(z[0])
+
+	s = []
+	s.append(t[0])
+	tempototal = 0L
+
+	for i, y in enumerate(t[0:-1]):
+		if  (t[i+1]-y) > inativsec:
+			temposecao = s[-1] - s[0]
+			tempototal += temposecao
+			s = [t[i+1]]
+		else:
+			s.append(y)
+	return tempototal/3600 #retorna o tempo total em horas
