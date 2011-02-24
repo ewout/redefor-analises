@@ -6,3 +6,4 @@
 *.png
 config.py
 data
+cache
