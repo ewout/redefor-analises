@@ -26,7 +26,8 @@ def loaddata(query,from_cache=True):
     c.execute(query)
     results = c.fetchall()
     if from_cache:
-        np.save(queryhash,array(results))
+        fpath = os.path.join(cachedir,queryhash + ".npy")
+        np.save(fpath,array(results))
     return array(results)
 
 

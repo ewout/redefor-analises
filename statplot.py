@@ -2,12 +2,24 @@
 # -*- coding: utf-8 -*-
 
 from pylab import *
-from mdlib import loaddata, courseinfo,courseusers,lastaccess, week_where
+from mdlib import loaddata, courseinfo,courseusers,lastaccess, week_where, dedica, courseids
 from matplotlib.ticker import MultipleLocator
 from matplotlib import cm
 from statlib import lorenz, gini
 import time
 
+def dedicacao(courseid):
+    userids = courseusers(courseid)['userid']
+    # choose 20 at random
+    indices = random_integers(0,len(userids),20)
+    userids = userids[indices] 
+    for userid in userids:
+        inativ = arange(0.1,10,0.1) # vary inativ from 0.1 to 10 hours
+        t = []
+        for tinativ in inativ:
+            t.append(dedica(tinativ*60, userid, startweek = 1, endweek = 10))
+        
+        plot(inativ,t,'o-')
 
 def tarefas():
     X = loaddata("SELECT from_unixtime(timemodified), timemodified, timemarked FROM mdl_assignment_submissions m where timemodified > %s and timemarked > 0 order by timemodified asc" % day0)
@@ -127,7 +139,8 @@ def acoes_visu2(courseid,start=1, end=10):
         cmap = cm.autumn
         ax = fig.add_subplot(111) 
         ax.plot(clicks/(3600.0), y ,'|')
-        ax.set_xlabel(u'ação (horas)')
+        ax.set_xlabel(u'um | por ação ('+str(end-start+1)+' semanas)')
+        ax.set_yticklabels([])
         figtext(0.8,0.8,course_shortname)
         #ax.hexbin(clicks, y, cmap=cmap, bins = 'log')
     
@@ -148,7 +161,7 @@ def lafigs(tlimit=30):
     'usuários com lastaccess < t vs t'
 
     i = 0
-    fig = figure()
+    fig = figure(figsize=(8,6))
 
     for courseid in courseids:
         i += 1
@@ -183,17 +196,33 @@ def lafigs(tlimit=30):
 
 def main():
 
-#    cadastros()
-#    acoes_cdf()
-#    acoes_tempo()
-#    lafigs()
-#    tarefas()
-#    acoes_distribucao(start = 10, end = 10)
-#    for cid in courseids:
-    acoes_visu2(26,start=1,end=1)
 
-        
-    show()
+#    from matplotlib.backends.backend_pdf import PdfPages
+#    pp = PdfPages('redefor-figs.pdf')
+
+#    cadastros()
+#    savefig('cadastros.png')
+#    acoes_cdf()
+#    savefig('acoes_cdf.png')
+#    acoes_tempo()
+#    savefig('acoes_tempo.png')
+#    lafigs()
+#    savefig('last_access.png',dpi=300)
+#    tarefas()
+#    acoes_distribucao(start = 1, end = 10)
+#    savefig('acoes_dist_tempos.png')
+#    dedicacao(26)
+#    savefig('dedica.png')
+
+
+#    pp.savefig()
+#    pp.close()
+
+
+    for cid in courseids:
+        acoes_visu2(cid,start=1,end=5)
+        savefig('acoes-visu-'+str(cid)+'.png')
+#   show()
 
 if __name__ == "__main__":
     main()
