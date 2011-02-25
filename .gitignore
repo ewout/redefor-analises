@@ -5,6 +5,8 @@
 *.pdf
 *.png
 *.gif
+*.gz
+
 config.py
 data
 cache
