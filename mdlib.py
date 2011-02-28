@@ -88,7 +88,8 @@ def week_where(startweek = 1, endweek = 10,timeexpr = 'timemodified'):
     end = start + (endweek)*3600*24*7
     return '%s between %s and %s' % (timeexpr,start,end)
 
-def dedica(inativ = 30, userid = 16, startweek = 1, endweek = 10):
+
+def dedica(inativ = 30, userid = 2, startweek = 1, endweek = 10):
 
 	inativsec = inativ*60
 
@@ -113,3 +114,21 @@ def dedica(inativ = 30, userid = 16, startweek = 1, endweek = 10):
 		else:
 			s.append(y)
 	return tempototal/3600 #retorna o tempo total em horas
+
+
+def notas_curso(courseid):
+	
+	queryid = 'SELECT id FROM mdl_grade_items where itemtype = "course" and courseid = %s' % courseid
+	id = loaddata(queryid)
+	itemid = id[0,0]
+        query = 'select finalgrade from mdl_grade_grades where itemid = %s' % itemid
+	notas = loaddata(query)
+
+	return notas
+
+
+
+
+
+
+
