@@ -134,38 +134,28 @@ def notas_grupo(courseid):
 	id = loaddata(queryid)
 	itemid = id[0,0] 
 
-	q1 = 'SELECT id FROM mdl_groups WHERE courseid = %s' % courseid
+	q1 = 'SELECT id FROM mdl_groups WHERE courseid = %s order by id asc'% courseid
 	groupids = loaddata(q1) #array com os ids de todos os grupos do
 
-
-	
-	if groupids[1,0]:
-	
-		for g in groupids[:,0]:
-		
-			medias = []	
-
-			print 'grupo %s' % g
-			
+	medias = []			
+	if groupids.any(): #verifica se ha grupos no curso
+		for g in groupids[:,0]: # repete para cada grupo
 			q2 = 'SELECT userid FROM mdl_groups_members where groupid=%s' % g
 			userids = loaddata(q2) #tomando os ids de usuarios do grupo
-			
 			notas =[]
-			
-			if userids.any():
-			
-				for u in userids[:,0]:
-				
-					print 'usuario %u' % u
-					
+			if userids.any(): #verifica se ha membros no grupo
+				for u in userids[:,0]: #repete para cada usuario
 					q3 = 'SELECT finalgrade FROM mdl_grade_grades WHERE userid=%s and itemid=%s' % (u, itemid)
-					nota = loaddata(q3)
-					
-					print 'nota %s' % nota
-					
-					if nota.any():
-					
-						notas.append(nota[0,0])
-			medias.append(mean(notas))				
-			
-		print 'media %s' % media
+					nota = loaddata(q3) #busca a nota final do usuario
+					if nota.any(): #verifica se ha notas para o usuario
+						if nota[0,0] is False: #verifica se a nota eh falsa
+							notas.append(0) #atribui zero caso seja falsa
+						else:
+							notas.append(float(nota[0,0])) #senao adiciona a nota aa lista de notas do grupo
+					else:
+						notas.append(0) # se o usuario nao tem nenhuma nota atribuida adiciona zero na lista de notas do grupo
+				medias.append(mean(notas)) 
+			else:
+				medias.append(0)
+				
+		return medias #retorna uma lista com as medias de notas finais dos grupos ordenado pelo id do grupo
