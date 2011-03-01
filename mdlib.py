@@ -127,8 +127,45 @@ def notas_curso(courseid):
 	return notas
 
 
+def notas_grupo(courseid):
+
+	#encontrando o id do item da nota final do curso
+	queryid = 'SELECT id FROM mdl_grade_items where itemtype = "course" and courseid = %s' % courseid
+	id = loaddata(queryid)
+	itemid = id[0,0] 
+
+	q1 = 'SELECT id FROM mdl_groups WHERE courseid = %s' % courseid
+	groupids = loaddata(q1) #array com os ids de todos os grupos do
 
 
+	
+	if groupids[1,0]:
+	
+		for g in groupids[:,0]:
+		
+			medias = []	
 
-
-
+			print 'grupo %s' % g
+			
+			q2 = 'SELECT userid FROM mdl_groups_members where groupid=%s' % g
+			userids = loaddata(q2) #tomando os ids de usuarios do grupo
+			
+			notas =[]
+			
+			if userids.any():
+			
+				for u in userids[:,0]:
+				
+					print 'usuario %u' % u
+					
+					q3 = 'SELECT finalgrade FROM mdl_grade_grades WHERE userid=%s and itemid=%s' % (u, itemid)
+					nota = loaddata(q3)
+					
+					print 'nota %s' % nota
+					
+					if nota.any():
+					
+						notas.append(nota[0,0])
+			medias.append(mean(notas))				
+			
+		print 'media %s' % media
