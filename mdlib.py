@@ -57,7 +57,7 @@ def courseusers(courseid):
     X = loaddata(query)
     cinfo = {'firstname': X[:,0],
              'lastname': X[:,1],
-             'userid': X[:,2],
+             'userid': [int(x) for x in X[:,2]],
              'lastaccess': [float(x) for x in (X[:,3])],
              'cshortname': X[:,4],
              'cfullname': X[:,5]}
@@ -123,10 +123,19 @@ def notas_curso(courseid):
 	queryid = 'SELECT id FROM mdl_grade_items where itemtype = "course" and courseid = %s' % courseid
 	id = loaddata(queryid)
 	itemid = id[0,0]
-        query = 'select finalgrade from mdl_grade_grades where itemid = %s' % itemid
-	notas = loaddata(query)
+	query = 'select finalgrade, userid from mdl_grade_grades where itemid = %s order by userid asc' % itemid
+	X = loaddata(query)
+	notas = X[:,0]
+	userids = [int(x) for x in X[:,1]]
+	
+	grade = []
+	for n in notas:
+		if not n:
+			grade.append(0)
+		else:
+			grade.append(float(n))
 
-	return notas
+	return grade, userids
 
 
 def notas_grupo(courseid):
@@ -160,7 +169,7 @@ def notas_grupo(courseid):
 			else:
 				medias.append(0)
 				
-		return medias #retorna uma lista com as medias de notas finais dos grupos ordenado pelo id do grupo
+	return medias #retorna uma lista com as medias de notas finais dos grupos ordenado pelo id do grupo
 		
 		
 def dedica_grupo(courseid):
@@ -182,4 +191,13 @@ def dedica_grupo(courseid):
 			t.append(tmedio)
 	return t
 	
-	
+def dedica_curso(courseid):
+
+#	ids = courseusers(courseid)["userid"]
+	grades, ids	= notas_curso(courseid)
+	if ids:
+		t = []
+		tempos = []
+		for u in ids:
+			tempos.append(dedica(30, u, 1, 10, courseid))
+	return tempos
