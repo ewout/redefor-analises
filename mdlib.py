@@ -89,12 +89,13 @@ def week_where(startweek = 1, endweek = 10,timeexpr = 'timemodified'):
     return '%s between %s and %s' % (timeexpr,start,end)
 
 
-def dedica(inativ = 30, userid = 2, startweek = 1, endweek = 10):
+def dedica(inativ = 30, userid = 2, startweek = 1, endweek = 10, courseid = 14):
 
 	inativsec = inativ*60
 
 	query = 'select time from mdl_log where '
 	query += week_where(startweek, endweek, 'time')
+	query += 'and course = %s ' % courseid 
 	query += 'and userid = %s order by time asc' % userid
 	X = list(loaddata(query))
 
@@ -103,7 +104,8 @@ def dedica(inativ = 30, userid = 2, startweek = 1, endweek = 10):
 		t.append(z[0])
 
 	s = []
-	s.append(t[0])
+	if len(t) > 0:
+		s.append(t[0])
 	tempototal = 0L
 
 	for i, y in enumerate(t[0:-1]):
@@ -159,3 +161,25 @@ def notas_grupo(courseid):
 				medias.append(0)
 				
 		return medias #retorna uma lista com as medias de notas finais dos grupos ordenado pelo id do grupo
+		
+		
+def dedica_grupo(courseid):
+
+	q1 = 'SELECT id FROM mdl_groups WHERE courseid = %s order by id asc'% courseid
+	groupids = loaddata(q1) #array com os ids de todos os grupos do
+	
+	if groupids.any():
+		t = []
+		for g in groupids[:,0]:
+		
+			q2 = 'SELECT userid FROM mdl_groups_members where groupid=%s' % g
+			userids = loaddata(q2) #tomando os ids de usuarios do grupo
+			tempos = []
+			if userids.any():
+				for u in userids[:,0]:
+					tempos.append(dedica(30, u, 1, 10, courseid))
+				tmedio = mean(tempos)
+			t.append(tmedio)
+	return t
+	
+	
