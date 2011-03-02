@@ -35,3 +35,10 @@ def gini2(x):
             s += abs(1.0*x[i]-1.0*x[j])
     return 0.5*s/mu/N**2
 
+def cdf(v):
+	
+	x = sorted(v, reverse=True)
+	y = arange(len(v))
+	
+	return x,y
+	
