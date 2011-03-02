@@ -194,7 +194,7 @@ def dedica_grupo(courseid):
 def dedica_curso(courseid):
 
 #	ids = courseusers(courseid)["userid"]
-	grades, ids	= notas_curso(courseid)
+	ids	= notas_curso(courseid)[1]
 	if ids:
 		t = []
 		tempos = []
