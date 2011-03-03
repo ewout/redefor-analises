@@ -123,18 +123,28 @@ def notas_curso(courseid):
 	queryid = 'SELECT id FROM mdl_grade_items where itemtype = "course" and courseid = %s' % courseid
 	id = loaddata(queryid)
 	itemid = id[0,0]
-	query = 'select finalgrade, userid from mdl_grade_grades where itemid = %s order by userid asc' % itemid
+	
+#	query = 'select finalgrade, userid from mdl_grade_grades where itemid = %s order by userid asc' % itemid
+	''
+	query = '''SELECT g.finalgrade, usr.id
+	FROM mdl_course c
+	INNER JOIN mdl_context cx ON c.id = cx.instanceid
+	INNER JOIN mdl_role_assignments ra ON cx.id = ra.contextid
+	INNER JOIN mdl_role r ON ra.roleid = r.id
+	INNER JOIN mdl_user usr ON ra.userid = usr.id
+	INNER JOIN mdl_grade_grades g ON usr.id = g.userid
+	INNER JOIN mdl_grade_items gi ON g.itemid = gi.id
+	WHERE r.id = 5 AND gi.id = %s AND c.id = %s AND cx.contextlevel = '50'
+	ORDER BY usr.id asc''' % (itemid, courseid)
 	X = loaddata(query)
 	notas = X[:,0]
 	userids = [int(x) for x in X[:,1]]
-	
 	grade = []
 	for n in notas:
 		if not n:
 			grade.append(0)
 		else:
 			grade.append(float(n))
-
 	return grade, userids
 
 
