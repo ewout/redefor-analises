@@ -193,6 +193,7 @@ def lafigs(tlimit=30):
     figtext(0.2,0.95,u'Participantes (fração do total) nos últimos N dias (antes de %s )' % t0)
     fig.subplots_adjust(hspace=0.4)
 
+
 def notas_vs_dedica():
 
 	for n, cid in enumerate(courseids):
@@ -209,6 +210,7 @@ def notas_vs_dedica():
 		title('Todos')
 		plt.axis([0,100,0,10])
 	show()
+
 
 
 def main():
@@ -237,8 +239,8 @@ def main():
 #	hist(notas_curso(24)[0],bins=20)
 
 #    for cid in courseids:
-        acoes_visu2(cid,start=1,end=5)
-        savefig('acoes-visu-'+str(cid)+'.png')
+#        acoes_visu2(cid,start=1,end=5)
+#       savefig('acoes-visu-'+str(cid)+'.png')
 #   show()
 
 if __name__ == "__main__":
