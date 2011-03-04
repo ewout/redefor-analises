@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from pylab import *
-from mdlib import loaddata, courseinfo,courseusers,lastaccess, week_where, dedica, courseids
+from mdlib import loaddata, courseinfo,courseusers,lastaccess, week_where, dedica, courseids, dedica_curso, notas_curso
 from matplotlib.ticker import MultipleLocator
 from matplotlib import cm
 from statlib import lorenz, gini
@@ -193,9 +193,23 @@ def lafigs(tlimit=30):
     figtext(0.2,0.95,u'Participantes (fração do total) nos últimos N dias (antes de %s )' % t0)
     fig.subplots_adjust(hspace=0.4)
 
-def hist_notas(curso):
+def notas_vs_dedica():
 
-	hist(notas_curso(24)[0],bins=20)
+	for n, cid in enumerate(courseids):
+	
+		x = n+1
+		par = '42%s' % x
+		subplot(par)
+		plot(dedica_curso(cid),notas_curso(cid)[0],'ro')
+		title(courseinfo(cid)['shortname'])
+		plt.axis([0,150,0,10])
+	subplot(428)
+	for cid in courseids:
+		plot(dedica_curso(cid),notas_curso(cid)[0],'ro')
+		title('Todos')
+		plt.axis([0,100,0,10])
+	show()
+
 
 def main():
 
@@ -216,13 +230,13 @@ def main():
 #    savefig('acoes_dist_tempos.png')
 #    dedicacao(26)
 #    savefig('dedica.png')
-#	hist_notas(curso)
+	notas_vs_dedica()
 
 #    pp.savefig()
 #    pp.close()
 #	hist(notas_curso(24)[0],bins=20)
 
-    for cid in courseids:
+#    for cid in courseids:
         acoes_visu2(cid,start=1,end=5)
         savefig('acoes-visu-'+str(cid)+'.png')
 #   show()
