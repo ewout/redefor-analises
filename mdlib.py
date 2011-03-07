@@ -50,7 +50,7 @@ def courseusers(courseid):
     INNER JOIN mdl_context cx ON c.id = cx.instanceid
     AND cx.contextlevel = '50' and c.id=%s
     INNER JOIN mdl_role_assignments ra ON cx.id = ra.contextid
-    INNER JOIN mdl_role r ON ra.roleid = r.id
+    INNER JOIN mdl_role r ON ra.roleid = r.id and r.id = 5
     INNER JOIN mdl_user u ON ra.userid = u.id
     INNER JOIN mdl_user_lastaccess la ON la.userid = u.id and la.courseid = %s order by la.timeaccess desc''' % (courseid,courseid)
 
