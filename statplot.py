@@ -211,7 +211,21 @@ def notas_vs_dedica():
 		plt.axis([0,100,0,10])
 	show()
 
-
+def hist_notas():	
+	for n, cid in enumerate(courseids):
+		x = n+1
+		par = '42%s' % x
+		subplot(par)
+		hist(notas_curso(cid)[0],20)
+		title(courseinfo(cid)['shortname'])
+	subplot(428)
+	todas = []
+	for cid in courseids:
+		notas = notas_curso(cid)[0]
+		[todas.append(n) for n in notas] 
+	hist(todas,20)
+	title('Geral')
+	show()
 
 def main():
 
@@ -232,12 +246,10 @@ def main():
 #    savefig('acoes_dist_tempos.png')
 #    dedicacao(26)
 #    savefig('dedica.png')
-	notas_vs_dedica()
-
+     notas_vs_dedica()
+#    hist_notas()
 #    pp.savefig()
 #    pp.close()
-#	hist(notas_curso(24)[0],bins=20)
-
 #    for cid in courseids:
 #        acoes_visu2(cid,start=1,end=5)
 #       savefig('acoes-visu-'+str(cid)+'.png')
