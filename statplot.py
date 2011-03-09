@@ -103,7 +103,7 @@ def acoes_visu(users,start=1, end=10):
         axis("off")
         ax.plot(clicks, zeros(len(clicks)),'|')
     
-def acoes_visu2(courseid,start=1, end=10):
+def acoes_visu2(courseid,start=1, end=10, plottype='ticks'):
     ''
 
     def query1(users):
@@ -128,23 +128,34 @@ def acoes_visu2(courseid,start=1, end=10):
     fig = figure()
     
     X = loaddata(query1(users))
-    if X.any():
-        clicks = X[:,1] - X[0,1]
-        userids = X[:,0]
-        # ordenar por userid com maior acoes
-        Y = loaddata(query2(userids))
-        userids_by_clicks = list(Y[:,0])
-        # mapear userids para 0..nusers 
-        y = [userids_by_clicks.index(u) for u in userids]
-        cmap = cm.autumn
-        ax = fig.add_subplot(111) 
+    clicks = X[:,1] - X[0,1]
+    userids = X[:,0]
+    # ordenar por userid com maior acoes
+    Y = loaddata(query2(userids))
+    userids_by_clicks = list(Y[:,0])
+    # mapear userids para 0..nusers 
+    y = [userids_by_clicks.index(u) for u in userids]
+    ax = fig.add_subplot(111) 
+    figtext(0.8,0.8,course_shortname)
+    if plottype == 'ticks':
         ax.plot(clicks/(3600.0), y ,'|')
         ax.set_xlabel(u'um | por ação ('+str(end-start+1)+' semanas)')
         ax.set_yticklabels([])
-        figtext(0.8,0.8,course_shortname)
-        #ax.hexbin(clicks, y, cmap=cmap, bins = 'log')
-    
-
+    elif plottype == 'heatmap':
+        xbins = (end-start+1)*7*24 # 1 hora / bin
+        ybins = len(users)/10 # 10 usuários / bin
+        heatmap, xedges, yedges = histogram2d(y,clicks,bins=(ybins,xbins))
+        print heatmap
+        print 'xbins', xbins, 'ybins ', ybins
+        print 'max', heatmap.max()
+        cmap = cm.hot
+        img = imshow(heatmap,cmap=cmap,origin='lower')
+        clim = (0,heatmap.mean()*1.2)
+        img.set_clim(clim)
+        img.axes.set_yticklabels([])
+        cb = colorbar()
+        cb.set_label('hoi')
+        
 
 def cadastros():
     # cadastros desde 02/10/2010
@@ -218,11 +229,12 @@ def main():
 #    pp.savefig()
 #    pp.close()
 
+    acoes_visu2(24,start=1,end=1,plottype='heatmap')
 
-    for cid in courseids:
-        acoes_visu2(cid,start=1,end=5)
-        savefig('acoes-visu-'+str(cid)+'.png')
-#   show()
+#    for cid in courseids:
+#        acoes_visu2(cid,start=1,end=5)
+#        savefig('acoes-visu-'+str(cid)+'.png')
+    show()
 
 if __name__ == "__main__":
     main()
