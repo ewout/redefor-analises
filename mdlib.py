@@ -106,7 +106,7 @@ def dedica(inativ = 30, userid = 2, startweek = 1, endweek = 10, courseid = 14):
 	s = []
 	if len(t) > 0:
 		s.append(t[0])
-	tempototal = 0L
+	tempototal = 0.0
 
 	for i, y in enumerate(t[0:-1]):
 		if  (t[i+1]-y) > inativsec:
