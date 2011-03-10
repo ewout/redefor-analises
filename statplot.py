@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from pylab import *
-from mdlib import loaddata, courseinfo,courseusers,lastaccess, week_where, dedica, courseids, dedica_curso, notas_curso
+from mdlib import *	
 from matplotlib.ticker import MultipleLocator
 from matplotlib import cm
 from statlib import lorenz, gini
@@ -196,6 +196,9 @@ def lafigs(tlimit=30):
 
 def notas_vs_dedica():
 
+	fig = figure()
+	fig.suptitle('Notas vs Atividade')
+
 	for n, cid in enumerate(courseids):
 	
 		x = n+1
@@ -206,13 +209,44 @@ def notas_vs_dedica():
 		plot(tempos,notas,'ro')
 		title(courseinfo(cid)['shortname'])
 		plt.axis([0,150,0,10])
+		xlabel('Atividade')
+		ylabel('Nota')
 		subplot(428)
 		plot(tempos,notas,'ro')
 	title('Todos')
+	xlabel('Atividade')
+	ylabel('Nota')
 	plt.axis([0,150,0,10])
+	show()
+	
+def notas_vs_dedica_grupos():
+
+	fig = figure()
+	fig.suptitle('Notas vs Atividade (por grupo)')
+	
+	for n, cid in enumerate(courseids):
+		x = n+1
+		par = '42%s' % x
+		subplot(par)
+		notas = notas_grupo(cid)
+		tempos = dedica_grupo(cid)
+		plot(tempos,notas,'ro')
+		title(courseinfo(cid)['shortname'])
+		axis([0,100,0,10])
+		xlabel('Atividade')
+		ylabel('Nota')
+		subplot(428)
+		plot(tempos,notas,'ro')
+	title('Todos')
+	ylabel('Nota')
+	subplot(428)
+	axis([0,100,0,10])
 	show()
 
 def hist_notas():
+	
+	fig = figure()
+	fig.suptitle('Histograma de notas por curso')
 	todas = []
 	for n, cid in enumerate(courseids):
 		x = n+1
@@ -224,6 +258,24 @@ def hist_notas():
 		[todas.append(n) for n in notas]
 	subplot(428)
 	hist(todas,20)	
+	title('Geral')
+	show()
+	
+def hist_dedica():
+
+	fig = figure()
+	fig.suptitle('Histograma de atividade por curso')
+	geral = []
+	for n, cid in enumerate(courseids):
+		x = n+1
+		par = '42%s' % x
+		subplot(par)
+		tempo = dedica_curso(cid)
+		hist(tempo,20,(0,160))
+		title(courseinfo(cid)['shortname'])
+		[geral.append(n) for n in tempo]
+	subplot(428)
+	hist(geral,20,(0,160))	
 	title('Geral')
 	show()
 
@@ -246,7 +298,8 @@ def main():
 #    savefig('acoes_dist_tempos.png')
 #    dedicacao(26)
 #    savefig('dedica.png')
-    notas_vs_dedica()
+#    notas_vs_dedica()
+    notas_vs_dedica_grupos()
 #    hist_notas()
 #    pp.savefig()
 #    pp.close()
