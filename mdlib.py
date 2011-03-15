@@ -232,3 +232,16 @@ def usersbyrole(courseid, roleid=5):
              'cshortname': X[:,4],
              'cfullname': X[:,5]}
     return cinfo
+    
+def studantsbygroup(groupid):
+
+	query = '''select gm.userid from mdl_groups_members gm where groupid = %s and gm.userid not in (select ra.userid from mdl_role_assignments ra where roleid = 4)''' % groupid
+		
+	X = loaddata(query)
+	if X.any():
+		notas = X[:,0]
+		userids = [int(x) for x in X[:,0]]
+	else:
+		userids = []
+			
+	return userids
