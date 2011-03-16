@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from pylab import *
-from mdlib import loaddata, courseinfo,courseusers,lastaccess, week_where, dedica, courseids
+from mdlib import *	
 from matplotlib.ticker import MultipleLocator
 from matplotlib import cm
 from statlib import lorenz, gini
@@ -136,25 +136,28 @@ def acoes_visu2(courseid,start=1, end=10, plottype='ticks'):
     # mapear userids para 0..nusers 
     y = [userids_by_clicks.index(u) for u in userids]
     ax = fig.add_subplot(111) 
-    figtext(0.8,0.8,course_shortname)
+    figtext(0.9,0.9,course_shortname)
     if plottype == 'ticks':
         ax.plot(clicks/(3600.0), y ,'|')
         ax.set_xlabel(u'um | por ação ('+str(end-start+1)+' semanas)')
         ax.set_yticklabels([])
     elif plottype == 'heatmap':
         xbins = (end-start+1)*7*24 # 1 hora / bin
-        ybins = len(users)/10 # 10 usuários / bin
+        ybins = len(users)/5 # 5 usuários / bin
         heatmap, xedges, yedges = histogram2d(y,clicks,bins=(ybins,xbins))
         print heatmap
         print 'xbins', xbins, 'ybins ', ybins
         print 'max', heatmap.max()
         cmap = cm.hot
+        #img = imshow(heatmap,cmap=cmap,origin='lower',aspect = xbins/ybins)
         img = imshow(heatmap,cmap=cmap,origin='lower')
-        clim = (0,heatmap.mean()*1.2)
+        #clim = (0,heatmap.mean()*2)
+        clim = (0,30)
         img.set_clim(clim)
         img.axes.set_yticklabels([])
+        img.axes.set_xlabel(u'horas')
         cb = colorbar()
-        cb.set_label('hoi')
+        cb.set_label('clicks por hora')
         
 
 def cadastros():
@@ -205,6 +208,91 @@ def lafigs(tlimit=30):
     fig.subplots_adjust(hspace=0.4)
 
 
+def notas_vs_dedica():
+
+	fig = figure()
+	fig.suptitle('Notas vs Atividade')
+
+	for n, cid in enumerate(courseids):
+	
+		x = n+1
+		par = '42%s' % x
+		subplot(par)
+		notas = notas_curso(cid)[0]
+		tempos = dedica_curso(cid)
+		plot(tempos,notas,'ro')
+		title(courseinfo(cid)['shortname'])
+		plt.axis([0,150,0,10])
+		xlabel('Atividade')
+		ylabel('Nota')
+		subplot(428)
+		plot(tempos,notas,'ro')
+	title('Todos')
+	xlabel('Atividade')
+	ylabel('Nota')
+	plt.axis([0,150,0,10])
+	show()
+	
+def notas_vs_dedica_grupos():
+
+	fig = figure()
+	fig.suptitle('Notas vs Atividade (por grupo)')
+	
+	for n, cid in enumerate(courseids):
+		x = n+1
+		par = '42%s' % x
+		subplot(par)
+		notas = notas_grupo(cid)
+		tempos = dedica_grupo(cid)
+		plot(tempos,notas,'ro')
+		title(courseinfo(cid)['shortname'])
+		axis([0,100,0,10])
+		xlabel('Atividade')
+		ylabel('Nota')
+		subplot(428)
+		plot(tempos,notas,'ro')
+	title('Todos')
+	ylabel('Nota')
+	subplot(428)
+	axis([0,100,0,10])
+	show()
+
+def hist_notas():
+	
+	fig = figure()
+	fig.suptitle('Histograma de notas por curso')
+	todas = []
+	for n, cid in enumerate(courseids):
+		x = n+1
+		par = '42%s' % x
+		subplot(par)
+		notas = notas_curso(cid)[0]
+		hist(notas,20)
+		title(courseinfo(cid)['shortname'])
+		[todas.append(n) for n in notas]
+	subplot(428)
+	hist(todas,20)	
+	title('Geral')
+	show()
+	
+def hist_dedica():
+
+	fig = figure()
+	fig.suptitle('Histograma de atividade por curso')
+	geral = []
+	for n, cid in enumerate(courseids):
+		x = n+1
+		par = '42%s' % x
+		subplot(par)
+		tempo = dedica_curso(cid)
+		hist(tempo,20,(0,160))
+		title(courseinfo(cid)['shortname'])
+		[geral.append(n) for n in tempo]
+	subplot(428)
+	hist(geral,20,(0,160))	
+	title('Geral')
+	show()
+
 def main():
 
 
@@ -224,16 +312,19 @@ def main():
 #    savefig('acoes_dist_tempos.png')
 #    dedicacao(26)
 #    savefig('dedica.png')
-
-
+#    notas_vs_dedica()
+#    notas_vs_dedica_grupos()
+#    hist_notas()
 #    pp.savefig()
 #    pp.close()
 
-    acoes_visu2(24,start=1,end=1,plottype='heatmap')
+#    acoes_visu2(14,start=1,end=2,plottype='heatmap')
 
-#    for cid in courseids:
-#        acoes_visu2(cid,start=1,end=5)
-#        savefig('acoes-visu-'+str(cid)+'.png')
+    for cid in courseids:
+        acoes_visu2(cid,start=1,end=5,plottype='heatmap')
+        savefig('acoes-visu-1-5'+str(cid)+'.png')
+        acoes_visu2(cid,start=5,end=10,plottype='heatmap')
+        savefig('acoes-visu-5-10'+str(cid)+'.png')
     show()
 
 if __name__ == "__main__":

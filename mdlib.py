@@ -50,14 +50,14 @@ def courseusers(courseid):
     INNER JOIN mdl_context cx ON c.id = cx.instanceid
     AND cx.contextlevel = '50' and c.id=%s
     INNER JOIN mdl_role_assignments ra ON cx.id = ra.contextid
-    INNER JOIN mdl_role r ON ra.roleid = r.id
+    INNER JOIN mdl_role r ON ra.roleid = r.id and r.id = 5
     INNER JOIN mdl_user u ON ra.userid = u.id
     INNER JOIN mdl_user_lastaccess la ON la.userid = u.id and la.courseid = %s order by la.timeaccess desc''' % (courseid,courseid)
 
     X = loaddata(query)
     cinfo = {'firstname': X[:,0],
              'lastname': X[:,1],
-             'userid': X[:,2],
+             'userid': [int(x) for x in X[:,2]],
              'lastaccess': [float(x) for x in (X[:,3])],
              'cshortname': X[:,4],
              'cfullname': X[:,5]}
@@ -88,12 +88,14 @@ def week_where(startweek = 1, endweek = 10,timeexpr = 'timemodified'):
     end = start + (endweek)*3600*24*7
     return '%s between %s and %s' % (timeexpr,start,end)
 
-def dedica(inativ = 30, userid = 16, startweek = 1, endweek = 10):
+
+def dedica(inativ = 30, userid = 2, startweek = 1, endweek = 10, courseid = 14):
 
 	inativsec = inativ*60
 
 	query = 'select time from mdl_log where '
 	query += week_where(startweek, endweek, 'time')
+	query += 'and course = %s ' % courseid 
 	query += 'and userid = %s order by time asc' % userid
 	X = list(loaddata(query))
 
@@ -102,8 +104,9 @@ def dedica(inativ = 30, userid = 16, startweek = 1, endweek = 10):
 		t.append(z[0])
 
 	s = []
-	s.append(t[0])
-	tempototal = 0L
+	if len(t) > 0:
+		s.append(t[0])
+	tempototal = 0.0
 
 	for i, y in enumerate(t[0:-1]):
 		if  (t[i+1]-y) > inativsec:
@@ -113,3 +116,98 @@ def dedica(inativ = 30, userid = 16, startweek = 1, endweek = 10):
 		else:
 			s.append(y)
 	return tempototal/3600 #retorna o tempo total em horas
+
+
+def notas_curso(courseid):
+	
+	queryid = 'SELECT id FROM mdl_grade_items where itemtype = "course" and courseid = %s' % courseid
+	id = loaddata(queryid)
+	itemid = id[0,0]
+	
+#	query = 'select finalgrade, userid from mdl_grade_grades where itemid = %s order by userid asc' % itemid
+	''
+	query = '''SELECT g.finalgrade, usr.id
+	FROM mdl_course c
+	INNER JOIN mdl_context cx ON c.id = cx.instanceid
+	INNER JOIN mdl_role_assignments ra ON cx.id = ra.contextid
+	INNER JOIN mdl_role r ON ra.roleid = r.id
+	INNER JOIN mdl_user usr ON ra.userid = usr.id
+	INNER JOIN mdl_grade_grades g ON usr.id = g.userid
+	INNER JOIN mdl_grade_items gi ON g.itemid = gi.id
+	WHERE r.id = 5 AND gi.id = %s AND c.id = %s AND cx.contextlevel = '50'
+	ORDER BY usr.id asc''' % (itemid, courseid)
+	X = loaddata(query)
+	notas = X[:,0]
+	userids = [int(x) for x in X[:,1]]
+	grade = []
+	for n in notas:
+		if not n:
+			grade.append(0)
+		else:
+			grade.append(float(n))
+	return grade, userids
+
+
+def notas_grupo(courseid):
+
+	#encontrando o id do item da nota final do curso
+	queryid = 'SELECT id FROM mdl_grade_items where itemtype = "course" and courseid = %s' % courseid
+	id = loaddata(queryid)
+	itemid = id[0,0] 
+
+	q1 = 'SELECT id FROM mdl_groups WHERE courseid = %s order by id asc'% courseid
+	groupids = loaddata(q1) #array com os ids de todos os grupos do
+
+	medias = []			
+	if groupids.any(): #verifica se ha grupos no curso
+		for g in groupids[:,0]: # repete para cada grupo
+			q2 = 'SELECT userid FROM mdl_groups_members where groupid=%s' % g
+			userids = loaddata(q2) #tomando os ids de usuarios do grupo
+			notas =[]
+			if userids.any(): #verifica se ha membros no grupo
+				for u in userids[:,0]: #repete para cada usuario
+					q3 = 'SELECT finalgrade FROM mdl_grade_grades WHERE userid=%s and itemid=%s' % (u, itemid)
+					nota = loaddata(q3) #busca a nota final do usuario
+					if nota.any(): #verifica se ha notas para o usuario
+						if nota[0,0] is False: #verifica se a nota eh falsa
+							notas.append(0) #atribui zero caso seja falsa
+						else:
+							notas.append(float(nota[0,0])) #senao adiciona a nota aa lista de notas do grupo
+					else:
+						notas.append(0) # se o usuario nao tem nenhuma nota atribuida adiciona zero na lista de notas do grupo
+				medias.append(mean(notas)) 
+			else:
+				medias.append(0)
+				
+	return medias #retorna uma lista com as medias de notas finais dos grupos ordenado pelo id do grupo
+		
+		
+def dedica_grupo(courseid):
+
+	q1 = 'SELECT id FROM mdl_groups WHERE courseid = %s order by id asc'% courseid
+	groupids = loaddata(q1) #array com os ids de todos os grupos do
+	
+	if groupids.any():
+		t = []
+		for g in groupids[:,0]:
+		
+			q2 = 'SELECT userid FROM mdl_groups_members where groupid=%s' % g
+			userids = loaddata(q2) #tomando os ids de usuarios do grupo
+			tempos = []
+			if userids.any():
+				for u in userids[:,0]:
+					tempos.append(dedica(30, u, 1, 10, courseid))
+				tmedio = mean(tempos)
+			t.append(tmedio)
+	return t
+	
+def dedica_curso(courseid):
+
+#	ids = courseusers(courseid)["userid"]
+	ids	= notas_curso(courseid)[1]
+	if ids:
+		t = []
+		tempos = []
+		for u in ids:
+			tempos.append(dedica(30, u, 1, 10, courseid))
+	return tempos
