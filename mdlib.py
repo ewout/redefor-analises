@@ -201,6 +201,7 @@ def dedica_grupo(courseid):
 			t.append(tmedio)
 	return t
 	
+	
 def dedica_curso(courseid):
 
 #	ids = courseusers(courseid)["userid"]
@@ -211,3 +212,36 @@ def dedica_curso(courseid):
 		for u in ids:
 			tempos.append(dedica(30, u, 1, 10, courseid))
 	return tempos
+	
+def usersbyrole(courseid, roleid=5):
+    ''
+    query = '''SELECT u.firstname, u.lastname, u.id, la.timeaccess, c.shortname, c.fullname 
+    FROM mdl_course c
+    INNER JOIN mdl_context cx ON c.id = cx.instanceid
+    AND cx.contextlevel = '50' and c.id=%s
+    INNER JOIN mdl_role_assignments ra ON cx.id = ra.contextid
+    INNER JOIN mdl_role r ON ra.roleid = r.id and r.id = %s
+    INNER JOIN mdl_user u ON ra.userid = u.id
+    INNER JOIN mdl_user_lastaccess la ON la.userid = u.id and la.courseid = %s order by la.timeaccess desc''' % (courseid,roleid,courseid)
+
+    X = loaddata(query)
+    cinfo = {'firstname': X[:,0],
+             'lastname': X[:,1],
+             'userid': [int(x) for x in X[:,2]],
+             'lastaccess': [float(x) for x in (X[:,3])],
+             'cshortname': X[:,4],
+             'cfullname': X[:,5]}
+    return cinfo
+    
+def studantsbygroup(groupid):
+
+	query = '''select gm.userid from mdl_groups_members gm where groupid = %s and gm.userid not in (select ra.userid from mdl_role_assignments ra where roleid = 4)''' % groupid
+		
+	X = loaddata(query)
+	if X.any():
+		notas = X[:,0]
+		userids = [int(x) for x in X[:,0]]
+	else:
+		userids = []
+			
+	return userids
