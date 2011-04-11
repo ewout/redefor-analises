@@ -293,6 +293,37 @@ def hist_dedica():
 	title('Geral')
 	show()
 
+def notas_fuvest(fn):
+    from scipy.stats import gaussian_kde
+    prova = csv2rec(fn)
+    cursos = {
+        480100007 : u'Ciências',
+        410100001 : u'Biologia',
+        480100015 : u'Diretores',
+        810100001 : u'Supervisores',
+        480100011 : u'Coordenadores'
+        }
+
+    fig = plt.figure()
+    fig.text(0.5,0.975,u'Redefor 2011-04-08, prova Módulo 1 e 2',horizontalalignment='center',verticalalignment='top')
+    p = arange(0,40,0.1)
+    axt = fig.add_subplot(3,2,6)
+
+    for i,curso in enumerate(cursos):
+        curso
+        notas = [x['pontos11'] for x in prova if x['curusp'] == curso]
+        kde = gaussian_kde(array(notas)*1.0)
+        line = axt.plot(p,kde(p),'-')
+        color = line[-1].get_color()
+        ax = fig.add_subplot(3,2,i+1)
+        ax.hist(notas,normed=True,rwidth=0.9,color=color)
+        ax.set_xlim(0,40)
+        ax.set_ylim(0,0.12)
+        ax.text(0.05,0.82,cursos[curso]+u' N = '+unicode(len(notas)),transform=ax.transAxes)
+
+
+    
+
 def main():
 
 
@@ -320,11 +351,13 @@ def main():
 
 #    acoes_visu2(14,start=1,end=2,plottype='heatmap')
 
-    for cid in courseids:
-        acoes_visu2(cid,start=1,end=5,plottype='heatmap')
-        savefig('acoes-visu-1-5'+str(cid)+'.png')
-        acoes_visu2(cid,start=5,end=10,plottype='heatmap')
-        savefig('acoes-visu-5-10'+str(cid)+'.png')
+#    for cid in courseids:
+#        acoes_visu2(cid,start=1,end=5,plottype='heatmap')
+#        savefig('acoes-visu-1-5'+str(cid)+'.png')
+#        acoes_visu2(cid,start=5,end=10,plottype='heatmap')
+#        savefig('acoes-visu-5-10'+str(cid)+'.png')
+    notas_fuvest('redefor2011a-1-fuvest8abr2011.csv')
+
     show()
 
 if __name__ == "__main__":
