@@ -5,6 +5,7 @@ import MySQLdb as mysql
 import hashlib
 import config
 import time, os
+from datetime import date
 
 cachedir = 'cache'
 courseids = [14,15,24,25,26,21,34]
@@ -245,3 +246,51 @@ def studantsbygroup(groupid):
 		userids = []
 			
 	return userids
+	
+	
+def ativuser(userid):
+	
+	query = '''select count(*) from mdl_log where userid = %s;''' % userid
+	a = loaddata(query)[0,0]
+	
+	return a
+	
+	
+def infocsv(courseid):
+	
+	nusp = []
+	grupo = []
+	ativ = []
+	desist = []
+	
+	q1 = '''select id from mdl_groups where courseid = %s;''' % courseid
+	grupos = list(loaddata(q1)[:,0])
+	if grupos <> []:
+		for g in grupos:
+			users = studantsbygroup(g)
+			if users <> []:
+				for u in users:
+					n = loaddata('''select idnumber from mdl_user where id = %s''' % u)[0,0]
+					if n:
+						nusp.append(n)
+					else:
+						nusp.append(0)
+					grupo.append(loaddata('''select name from mdl_groups where id = %s''' % g)[0,0])
+					ativ.append(ativuser(u))
+					la = loaddata('''select from_unixtime(lastaccess) from mdl_user where id = %s''' % u)[0,0]
+					delta = date.today() - la.date()
+					if  delta.days > 30:
+						desist.append(1)
+					else:
+						desist.append(0)
+	nusp = array(nusp)
+	grupo = array(grupo)
+	ativ = array(ativ)
+	desist = array(desist)
+	
+	reg = rec.fromarrays([nusp,grupo,ativ,desist], names = 'NumUSP, Grupo, Atividade, Desistente')
+	
+	rec2csv(reg,'infocurso.csv')
+	
+	
+	
