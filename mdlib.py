@@ -8,7 +8,16 @@ import time, os
 from datetime import date
 
 cachedir = 'cache'
-courseids = [14,15,24,25,26,21,34]
+courseids1 = [14,15,24,25,26,21,34]
+courseids2 = []
+courseids3 = []
+courseids4 = []
+
+idnotava1 = [84,215,1159,1602,[1905,1906],[1603,1604],[1621,1622]]
+idnotava2 = []
+idnotava3 = []
+idnotava4 = []
+
 day0 = time.mktime((2010,10,4,0,0,0,0,0,0))
 
 prefix = "mdl_"
@@ -234,9 +243,9 @@ def usersbyrole(courseid, roleid=5):
              'cfullname': X[:,5]}
     return cinfo
     
-def studantsbygroup(groupid):
+def usersbygroup(groupid, roleid=5):
 
-	query = '''select gm.userid from mdl_groups_members gm where groupid = %s and gm.userid not in (select ra.userid from mdl_role_assignments ra where roleid = 4)''' % groupid
+	query = '''select gm.userid from mdl_groups_members gm where groupid = %s and gm.userid in (select ra.userid from mdl_role_assignments ra where roleid = %s)''' % (groupid, roleid)
 		
 	X = loaddata(query)
 	if X.any():
@@ -256,41 +265,77 @@ def ativuser(userid):
 	return a
 	
 	
-def infocsv(courseid):
+def infocsv():
 	
-	nusp = []
-	grupo = []
-	ativ = []
-	desist = []
-	
-	q1 = '''select id from mdl_groups where courseid = %s;''' % courseid
-	grupos = list(loaddata(q1)[:,0])
-	if grupos <> []:
-		for g in grupos:
-			users = studantsbygroup(g)
-			if users <> []:
-				for u in users:
-					n = loaddata('''select idnumber from mdl_user where id = %s''' % u)[0,0]
-					if n:
-						nusp.append(n)
-					else:
-						nusp.append(0)
-					grupo.append(loaddata('''select name from mdl_groups where id = %s''' % g)[0,0])
-					ativ.append(ativuser(u))
-					la = loaddata('''select from_unixtime(lastaccess) from mdl_user where id = %s''' % u)[0,0]
-					delta = date.today() - la.date()
-					if  delta.days > 30:
-						desist.append(1)
-					else:
-						desist.append(0)
-	nusp = array(nusp)
-	grupo = array(grupo)
-	ativ = array(ativ)
-	desist = array(desist)
-	
-	reg = rec.fromarrays([nusp,grupo,ativ,desist], names = 'NumUSP, Grupo, Atividade, Desistente')
-	
-	rec2csv(reg,'infocurso.csv')
-	
+	for i, c in enumerate(courseids1):
+
+		nusp = []	
+		grupo = []
+		ativ = []
+		desist = []
+		tutor = []
+		notava1 = []
+		notava2 = []
+		
+		q1 = '''select id from mdl_groups where courseid = %s;''' % c
+		grupos = list(loaddata(q1)[:,0])
+		if grupos <> []:
+			for g in grupos:
+				users = usersbygroup(g)
+				users += usersbygroup(g,4)
+				if users <> []:
+					for u in users:
+						n = loaddata('''select idnumber from mdl_user where id = %s''' % u)
+						if n:
+							nusp.append(n[0,0])
+						else:
+							nusp.append(0)
+						grupo.append(loaddata('''select name from mdl_groups where id = %s''' % g)[0,0])
+						ativ.append(ativuser(u))
+						la = loaddata('''select from_unixtime(lastaccess) from mdl_user where id = %s''' % u)[0,0]
+						delta = date.today() - la.date()
+						if  delta.days > 30:
+							desist.append(1)
+						else:
+							desist.append(0)
+						t = loaddata('''select id from mdl_role_assignments where userid = %s and roleid = 4''' % u)
+						if t.any():
+							tutor.append(1)
+						else:
+							tutor.append(0)
+							
+						if type(idnotava1[i]) == list:
+							
+							n1 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idnotava1[i][0],u))
+							if n1.any():	
+								notava1.append(n1[0,0])
+							else:
+								notava1.append('-')
+
+							n2 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idnotava1[i][1],u))
+							if n2.any():
+								notava2.append(n2[0,0])
+							else:
+								notava2.append('-')
+
+						else:
+							n1 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idnotava1[i] ,u))					
+							if n1.any():
+								notava1.append(n1[0,0])
+							else:
+								notava1.append('-')
+							notava2.append('-')
+		nusp = array(nusp)
+		grupo = array(grupo)
+		ativ = array(ativ)
+		desist = array(desist)
+		tutor = array(tutor)
+		notava1 = array(notava1)
+		notava2 = array(notava2)
+		
+		reg = rec.fromarrays([nusp,grupo,ativ,desist,tutor,notava1,notava2], names = 'NumUSP, Grupo, Atividade, Desistente, Tutor, NotaAVA1, NotaAVA2')
+		outfile = 'csv/'+courseinfo(c)['shortname']+'.csv'
+		rec2csv(reg, outfile)
+		
 	
 	
