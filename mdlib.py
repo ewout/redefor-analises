@@ -8,18 +8,26 @@ import time, os
 from datetime import date
 
 cachedir = 'cache'
+
+# id dos curso dos modulos 1, 2, 3 e 4
 courseids1 = [14,15,24,25,26,21,34]
 courseids2 = []
 courseids3 = []
 courseids4 = []
 
+# id da nota AVA dos curso dos modulos 1, 2, 3 e 4
 idnotava1 = [84,215,1159,1602,[1905,1906],[1621,1622],[1603,1604]]
 idnotava2 = []
 idnotava3 = []
 idnotava4 = []
 
+# id da nota da prova presencial dos curso dos modulos 1, 2, 3 e 4
 idpp1 = [1560,1561,1564,1565,743,1571,1572]
 idpp2 = [1560,1561,1564,1565,743,1571,1572]
+
+# id da frequencia AVA dos curso dos modulos 1, 2, 3 e 4
+idfreqava1 = [899,906,909,912,869,[917,922],[916,923]]
+idfreqava2 = []
 
 day0 = time.mktime((2010,10,4,0,0,0,0,0,0))
 
@@ -270,6 +278,7 @@ def ativuser(userid):
 	
 def infocsv():
 	
+
 	for i, c in enumerate(courseids1):
 
 		nusp = []	
@@ -279,7 +288,9 @@ def infocsv():
 		tutor = []
 		notava1 = []
 		notava2 = []
-		notapp =[]
+		notapp = []
+		idfreqava1 = []
+		idfreqava2 = []
 		
 		q1 = '''select id from mdl_groups where courseid = %s;''' % c
 		grupos = list(loaddata(q1)[:,0])
@@ -317,7 +328,6 @@ def infocsv():
 						
 						#Nota AVA	
 						if type(idnotava1[i]) == list:
-							
 							n1 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idnotava1[i][0],u))
 							if n1.any():	
 								notava1.append(n1[0,0])
@@ -333,10 +343,10 @@ def infocsv():
 						else:
 							n1 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idnotava1[i],u))
 							if n1.any():
-								notava1.append(n1[0,0])
+								idfreqava1.append(n1[0,0])
 							else:
-								notava1.append('')
-							notava2.append('')
+								idfreqava1.append('')
+							idfreqava2.append('')
 						
 						#Nota da prova presencial
 						q = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idpp1[i],u))
@@ -344,6 +354,28 @@ def infocsv():
 							notapp.append(q[0,0])
 						else:
 							notapp.append('')
+							
+						#Frequencia
+						if type(idfreqava1[i]) == list:
+							f1 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idfreqava1[i][0],u))
+							if f1.any():	
+								freqava1.append(f1[0,0])
+							else:
+								freqava1.append('')
+
+							f2 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idfreqava1[i][1],u))
+							if f2.any():
+								freqava2.append(f2[0,0])
+							else:
+								freqava2.append('')
+
+						else:
+							f1 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idfreqava1[i],u))
+							if f1.any():
+								freqava1.append(f1[0,0])
+							else:
+								freqava1.append('')
+							freqava2.append('')
 						
 		nusp = array(nusp)
 		grupo = array(grupo)
@@ -353,8 +385,10 @@ def infocsv():
 		notava1 = array(notava1)
 		notava2 = array(notava2)
 		notapp = array(notapp)
+		idfreqava1 = array(idfreqava1)
+		idfreqava2 = array(idfreqava2)
 		
-		reg = rec.fromarrays([nusp,grupo,ativ,desist,tutor,notava1,notava2, notapp], names = 'NumUSP, Grupo, Atividade, Desistente, Tutor, NotaAVA1, NotaAVA2, Prova Presencial')
+		reg = rec.fromarrays([nusp,grupo,ativ,desist,tutor,notava1,notava2,notapp,idfreqava1,idfreqava2], names = 'NumUSP, Grupo, Atividade, Desistente, Tutor, NotaAVA1, NotaAVA2, Prova Presencial,Frequencia AVA 1,Frequencia AVA 2')
 		outfile = 'csv/'+courseinfo(c)['shortname']+'.csv'
 		rec2csv(reg, outfile)
 		
