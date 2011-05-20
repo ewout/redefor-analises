@@ -289,8 +289,8 @@ def infocsv():
 		notava1 = []
 		notava2 = []
 		notapp = []
-		idfreqava1 = []
-		idfreqava2 = []
+		freqava1 = []
+		freqava2 = []
 		
 		q1 = '''select id from mdl_groups where courseid = %s;''' % c
 		grupos = list(loaddata(q1)[:,0])
@@ -326,7 +326,8 @@ def infocsv():
 						else:
 							tutor.append(0)
 						
-						#Nota AVA	
+						#Nota AVA
+						
 						if type(idnotava1[i]) == list:
 							n1 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idnotava1[i][0],u))
 							if n1.any():	
@@ -343,10 +344,10 @@ def infocsv():
 						else:
 							n1 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idnotava1[i],u))
 							if n1.any():
-								idfreqava1.append(n1[0,0])
+								notava1.append(n1[0,0])
 							else:
-								idfreqava1.append('')
-							idfreqava2.append('')
+								notava1.append('')
+							notava2.append('')
 						
 						#Nota da prova presencial
 						q = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idpp1[i],u))
@@ -357,6 +358,7 @@ def infocsv():
 							
 						#Frequencia
 						if type(idfreqava1[i]) == list:
+							
 							f1 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idfreqava1[i][0],u))
 							if f1.any():	
 								freqava1.append(f1[0,0])
@@ -385,10 +387,10 @@ def infocsv():
 		notava1 = array(notava1)
 		notava2 = array(notava2)
 		notapp = array(notapp)
-		idfreqava1 = array(idfreqava1)
-		idfreqava2 = array(idfreqava2)
+		freqava1 = array(freqava1)
+		freqava2 = array(freqava2)
 		
-		reg = rec.fromarrays([nusp,grupo,ativ,desist,tutor,notava1,notava2,notapp,idfreqava1,idfreqava2], names = 'NumUSP, Grupo, Atividade, Desistente, Tutor, NotaAVA1, NotaAVA2, Prova Presencial,Frequencia AVA 1,Frequencia AVA 2')
+		reg = rec.fromarrays([nusp,grupo,ativ,desist,tutor,notava1,notava2,notapp,freqava1,freqava2], names = 'NumUSP, Grupo, Atividade, Desistente, Tutor, NotaAVA1, NotaAVA2, Prova Presencial,Frequencia AVA 1,Frequencia AVA 2')
 		outfile = 'csv/'+courseinfo(c)['shortname']+'.csv'
 		rec2csv(reg, outfile)
 		
