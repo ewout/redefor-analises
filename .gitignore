@@ -8,6 +8,7 @@
 *.gz
 *.csv
 
+/csv/
 config.py
 data
 cache
