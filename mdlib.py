@@ -496,7 +496,7 @@ def logcount(userid=None, courseid=None, mod=None, act=None):
                 if act is None:
                     w = '''where module = "%s"''' %mod
                 else:
-                    w = '''where modlue = "%s" and action="%s"''' %(mod, act)
+                    w = '''where module = "%s" and action="%s"''' %(mod, act)
         else:
             if mod is None:
                 if act is None:
@@ -507,7 +507,7 @@ def logcount(userid=None, courseid=None, mod=None, act=None):
                 if act is None:
                     w = '''where course = %s and module = "%s"''' %(courseid, mod)
                 else:
-                    w = '''where course = %s modlue = "%s" and action="%s"''' %(courseid, mod, act)
+                    w = '''where course = %s and module = "%s" and action="%s"''' %(courseid, mod, act)
     else:        
         if courseid is None:
             if mod is None:
@@ -530,6 +530,6 @@ def logcount(userid=None, courseid=None, mod=None, act=None):
                 if act is None:
                     w = '''where userid = %s and course = %s and module = "%s"''' %(userid, courseid, mod)
                 else:
-                    w = '''where userid = %s and course = %s modlue = "%s" and action="%s"''' %(userid, courseid, mod, act)
+                    w = '''where userid = %s and course = %s and module = "%s" and action="%s"''' %(userid, courseid, mod, act)
     query = "select count(*) from mdl_log "+w
     return loaddata(query)[0,0]
