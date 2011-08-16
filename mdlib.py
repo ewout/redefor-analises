@@ -479,24 +479,57 @@ def ativtutores(courseid):
     outfile = 'csv/AtivTutor-'+courseinfo(courseid)['shortname']+'.csv'
     print outfile
     fp = open(outfile,'w')
-    fp.write('nome\tatividade_total\tativ_forum\tativ_dialogo\n')
+    fp.write('nome\tatividade_total\tativ_forum\tativ_dialogo\tadd_entry\n')
     for i in ids:
-        fp.write(str(l2u(username(i)))+'\t'+str(logcount(i, courseid))+'\t'+str(logcount(i, courseid,'forum'))+'\t'+str(logcount(i,courseid,'dialogue'))+'\n')
+        fp.write(str(l2u(username(i)))+'\t'+str(logcount(i, courseid))+'\t'+str(logcount(i, courseid,'forum'))+'\t'+str(logcount(i,courseid,'dialogue'))+'\t'+str(logcount(i,courseid,'dialogue','add entry'))+'\n')
     fp.close()
     
-def logcount(userid, courseid, mod='all', act='all'):
-    if mod=='all':
-        query = '''select count(*) from mdl_log where userid = %s and course = %s''' %(userid, courseid)
-        print query
-    else:
-        if act=='all':
-            query = '''select count(*) from mdl_log where userid = %s and course = %s and module = "%s"''' %(userid, courseid, mod)
-            print query
+def logcount(userid=None, courseid=None, mod=None, act=None):
+    if userid is None:
+        if courseid is None:
+            if mod is None:
+                if act is None:
+                    w = ''
+                else:
+                    w = '''where action="%s"''' %act
+            else:
+                if act is None:
+                    w = '''where module = "%s"''' %mod
+                else:
+                    w = '''where modlue = "%s" and action="%s"''' %(mod, act)
         else:
-            query = '''select count(*) from mdl_log where userid = %s and course = %s and module = "%s" and action = "%s"''' %(userid, courseid, mod, act)
-            print query
+            if mod is None:
+                if act is None:
+                    w = '''where course = %s''' %courseid
+                else:
+                    w = '''where course = %s and action="%s"''' %(courseid, act)
+            else:
+                if act is None:
+                    w = '''where course = %s and module = "%s"''' %(courseid, mod)
+                else:
+                    w = '''where course = %s modlue = "%s" and action="%s"''' %(courseid, mod, act)
+    else:        
+        if courseid is None:
+            if mod is None:
+                if act is None:
+                    w = '''where userid = %s''' %userid
+                else:
+                    w = '''where userid = %s and action="%s"''' %(userid, act)
+            else:
+                if act is None:
+                    w = '''where userid = %s and module = "%s"'''%(userid, mod)
+                else:
+                    w = '''where userid = %s and modlue = "%s" and action="%s"''' %(userid, mod, act)
+        else:
+            if mod is None:
+                if act is None:
+                    w = '''where userid = %s and course = %s''' %(userid, courseid)
+                else:
+                    w = '''where userid = %s and course = %s and action="%s"''' %(userid, courseid, act)
+            else:
+                if act is None:
+                    w = '''where userid = %s and course = %s and module = "%s"''' %(userid, courseid, mod)
+                else:
+                    w = '''where userid = %s and course = %s modlue = "%s" and action="%s"''' %(userid, courseid, mod, act)
+    query = "select count(*) from mdl_log "+w
     return loaddata(query)[0,0]
-    
-
-
-
