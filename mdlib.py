@@ -533,3 +533,61 @@ def logcount(userid=None, courseid=None, mod=None, act=None):
                     w = '''where userid = %s and course = %s and module = "%s" and action="%s"''' %(userid, courseid, mod, act)
     query = "select count(*) from mdl_log "+w
     return loaddata(query)[0,0]
+
+
+def active_courses(n_actions, start = None, stop=None):
+    '''Returns array of course ids with at least n_actions between start and stop.
+    Start and stop are tuples of the form (year, month), for example (2010,1) for Jan. 2010'''
+
+    if not start:
+        starts = 0
+    else:
+        starts = time.mktime((start[0],start[1],0,0,0,0,0,0,0))
+    if not stop:
+        stop = time.localtime()
+    else:
+        stops = time.mktime((stop[0],stop[1],0,0,0,0,0,0,0))
+
+    query = 'SELECT course, count(*) n FROM mdl_log m where time between %s and %s and course <> 0 and course <> 1  group by course having count(*) > %s order by count(*) desc' % (starts,stops,n_actions)
+    X = loaddata(query)
+    if X.any():
+        return X[:,0]
+    else:
+        return array([])
+    
+
+def course_frame(start, stop):
+    '''Generates dataframe of course indicators from mdl_log 
+
+    Start and stop are tuples of the form (year, month), for example (2010,1) for Jan. 2010'''
+    
+    # courses with at least 10 actions in the time period
+    ids = active_courses(10, start, stop)
+
+    df = []
+
+    for id in ids:
+        forum_adds = logcount(courseid=id, mod='forum', act='add')
+        forum_views = logcount(courseid=id, mod='forum', act='view forum')
+        forum_posts = logcount(courseid=id, mod='forum', act='add post')
+
+        assignment_views = logcount(courseid=id, mod='assignment', act='view')
+        assignment_uploads = logcount(courseid=id, mod='assignment', act='upload')
+        assignment_adds = logcount(courseid=id, mod='assignment', act='add')
+
+        course_views = logcount(courseid=id, mod='course', act='view')
+
+        quiz_adds = logcount(courseid=id, mod='quiz', act='add')
+        quiz_views = logcount(courseid=id, mod='quiz', act='view')
+        quiz_attempts = logcount(courseid=id, mod='quiz', act='attempt')
+
+
+        resource_views = logcount(courseid=id, mod='resource', act='view')
+        resource_updates = logcount(courseid=id, mod='resource', act='update')
+        resource_adds = logcount(courseid=id, mod='resource', act='add')
+        
+        df.append((id,forum_adds,forum_views,forum_posts,assignment_views,assignment_uploads,assignment_adds,course_views,quiz_views,quiz_adds,quiz_attempts,resource_views,resource_updates,resource_adds))
+        
+    df = rec.fromrecords(df,names=('courseid','forum_adds','forum_views','forum_posts','assignment_views','assignment_uploads','assignment_adds','course_views','quiz_views','quiz_adds','quiz_attempts','resource_views','resource_updates','resource_adds'))
+
+    return df
