@@ -4,7 +4,7 @@ from pylab import *
 import MySQLdb as mysql
 import hashlib
 import config
-import time, os
+import time, os, decimal
 from datetime import date
 
 cachedir = 'cache'
@@ -34,6 +34,7 @@ day0 = time.mktime((2010,10,4,0,0,0,0,0,0))
 prefix = "mdl_"
 
 def loaddata(query,from_cache=True):
+
     if from_cache:
         queryhash = hashlib.md5(query).hexdigest()
         try:
@@ -591,3 +592,63 @@ def course_frame(start, stop):
     df = rec.fromrecords(df,names=('courseid','forum_adds','forum_views','forum_posts','assignment_views','assignment_uploads','assignment_adds','course_views','quiz_views','quiz_adds','quiz_attempts','resource_views','resource_updates','resource_adds'))
 
     return df
+
+def quiz_attempts(quizid,time='start'):
+    'Returns list of datetime times in ascending order. time ={start,finish,modified}'
+    
+    query = 'select from_unixtime(time%s) from mdl_quiz_attempts where quiz = %i order by time%s asc' % (time,quizid,time)
+    X = loaddata(query)
+    return X[:,0]
+
+def logs_per_day():
+    'return (date,actions)'
+    query = 'SELECT from_unixtime(time) date, year(from_unixtime(time)) year, dayofyear(from_unixtime(time)) day, count(*) actions FROM mdl_log m group by year, day'
+    X = loaddata(query,False)
+    return X[:,0],X[:,3]
+
+def quiz_attempts_hour_before_deadline():
+    '-- Number of quiz submissions by hour before deadline'
+    query = """
+SELECT 
+    (quiz.timeclose - qa.timefinish) / 3600 AS hoursbefore,
+    COUNT(1)
+
+FROM mdl_quiz_attempts as qa
+JOIN mdl_quiz as quiz ON quiz.id = qa.quiz
+
+WHERE
+    qa.preview = 0 AND
+    quiz.timeclose <> 0 AND
+    qa.timefinish <> 0
+
+AND
+    (quiz.timeclose - qa.timefinish) / 3600 < 24 * 7
+
+GROUP BY
+    (quiz.timeclose - qa.timefinish) / 3600
+
+ORDER BY
+    hoursbefore"""
+    X = loaddata(query)
+    return X
+
+def quiz_attempts_hourofday():
+    'Number of quiz submissions by hour of day'
+    query = """SELECT 
+    hour(from_unixtime(timefinish)) hour,
+    COUNT(1)
+
+FROM mdl_quiz_attempts qa
+
+WHERE
+    qa.preview = 0 AND
+    qa.timefinish <> 0
+
+GROUP BY
+    hour
+
+ORDER BY
+    hour
+"""
+    X = loaddata(query)
+    return X

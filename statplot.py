@@ -322,10 +322,22 @@ def notas_fuvest(fn):
         ax.text(0.05,0.82,cursos[curso]+u' N = '+unicode(len(notas)),transform=ax.transAxes)
 
 
+def quiz_attempts_plot(quizids):
+    for quizid in quizids:
+        t = quiz_attempts(quizid,time='start')
+        if quizid == 470:
+            t = t[0:-1]
+        plot(t,range(len(t)))
+    fig = gcf()
+    fig.autofmt_xdate()
+    return fig
+    
+        
     
 
 def main():
 
+    quiz_attempts_plot([470,478,501])
 
 #    from matplotlib.backends.backend_pdf import PdfPages
 #    pp = PdfPages('redefor-figs.pdf')
@@ -356,7 +368,7 @@ def main():
 #        savefig('acoes-visu-1-5'+str(cid)+'.png')
 #        acoes_visu2(cid,start=5,end=10,plottype='heatmap')
 #        savefig('acoes-visu-5-10'+str(cid)+'.png')
-    notas_fuvest('redefor2011a-1-fuvest8abr2011.csv')
+#    notas_fuvest('redefor2011a-1-fuvest8abr2011.csv')
 
     show()
 
