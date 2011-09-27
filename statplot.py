@@ -293,7 +293,7 @@ def hist_dedica():
 	title('Geral')
 	show()
 
-def notas_fuvest(fn):
+def notas_fuvest(fn, gtitle="Notas", notascol = 'pontos11', curcol='curusp'):
     from scipy.stats import gaussian_kde
     prova = csv2rec(fn)
     cursos = {
@@ -305,13 +305,13 @@ def notas_fuvest(fn):
         }
 
     fig = plt.figure()
-    fig.text(0.5,0.975,u'Redefor 2011-04-08, prova Módulo 1 e 2',horizontalalignment='center',verticalalignment='top')
+    fig.text(0.5,0.975,gtitle,horizontalalignment='center',verticalalignment='top')
     p = arange(0,40,0.1)
     axt = fig.add_subplot(3,2,6)
 
     for i,curso in enumerate(cursos):
         curso
-        notas = [x['pontos11'] for x in prova if x['curusp'] == curso]
+        notas = [x[notascol] for x in prova if x[curcol] == curso]
         kde = gaussian_kde(array(notas)*1.0)
         line = axt.plot(p,kde(p),'-')
         color = line[-1].get_color()
@@ -337,7 +337,7 @@ def quiz_attempts_plot(quizids):
 
 def main():
 
-    quiz_attempts_plot([470,478,501])
+#    quiz_attempts_plot([470,478,501])
 
 #    from matplotlib.backends.backend_pdf import PdfPages
 #    pp = PdfPages('redefor-figs.pdf')
@@ -368,7 +368,8 @@ def main():
 #        savefig('acoes-visu-1-5'+str(cid)+'.png')
 #        acoes_visu2(cid,start=5,end=10,plottype='heatmap')
 #        savefig('acoes-visu-5-10'+str(cid)+'.png')
-#    notas_fuvest('redefor2011a-1-fuvest8abr2011.csv')
+#    notas_fuvest('redefor2011a-1-fuvest8abr2011.csv',u'Redefor 2011-04-08, prova Módulo 1 e 2')
+    notas_fuvest('redefor2011-prova2.csv',u'Redefor 2011-09-03, prova Módulo 3 e 4','pontos1','codcur')
 
     show()
 

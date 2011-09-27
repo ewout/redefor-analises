@@ -9,6 +9,13 @@ from datetime import date
 
 cachedir = 'cache'
 
+moodles = {'stoa':'moodle',
+           'redefor':'moodle_redefor',
+           'liciencias':'moodle_lic_salas',
+           'evs':'moodle_evs',
+           'evc':'moodle_evc'}
+
+
 # id dos curso dos modulos 1, 2, 3 e 4
 courseids1 = [14,15,24,25,26,21,34]
 courseids2 = []
@@ -33,17 +40,17 @@ day0 = time.mktime((2010,10,4,0,0,0,0,0,0))
 
 prefix = "mdl_"
 
-def loaddata(query,from_cache=True):
+def loaddata(query,from_cache=True, moodle='moodle_redefor'):
 
     if from_cache:
-        queryhash = hashlib.md5(query).hexdigest()
+        queryhash = hashlib.md5(query+moodle).hexdigest()
         try:
             fpath = os.path.join(cachedir,queryhash + ".npy")
             return np.load(fpath)
         except IOError as msg:
             print msg
             
-    db = mysql.connect(host=config.host,user=config.user,passwd=config.passwd,db=config.db)
+    db = mysql.connect(host=config.host,user=config.user,passwd=config.passwd,db=moodle)
     c = db.cursor()
     c.execute(query)
     results = c.fetchall()
@@ -600,10 +607,10 @@ def quiz_attempts(quizid,time='start'):
     X = loaddata(query)
     return X[:,0]
 
-def logs_per_day():
+def logs_per_day(moodle='moodle'):
     'return (date,actions)'
     query = 'SELECT from_unixtime(time) date, year(from_unixtime(time)) year, dayofyear(from_unixtime(time)) day, count(*) actions FROM mdl_log m group by year, day'
-    X = loaddata(query,False)
+    X = loaddata(query,True,moodle)
     return X[:,0],X[:,3]
 
 def quiz_attempts_hour_before_deadline():
