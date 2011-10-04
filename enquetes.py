@@ -14,8 +14,35 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 import pandas
+from collections import Counter
 
 DATA_DIR = '~/Dropbox/ATP/Pesquisa/Data/'
+
+def graph_cb(df,ax):
+    ''
+    cb = df['classe_cb']
+    c = Counter(cb)
+    plt.pie(c.values(),labels=c.keys(),autopct='%1.0f%%')
+    ax.set_title(u'Critério Brasil')
+    return ax
+
+def graph_ldi(df,ax):
+    ''
+    plt.hist(df['ldi15'],rwidth=0.8)
+    ax.set_title(u'Indice de Literacia Digital\nEscala de 15 itens (0-4)')
+
+    return ax
+
+def make_graphs(df,filename):
+    ''
+    fig = plt.figure(figsize =(6,10))
+    ax1 = plt.subplot(211)
+    ax1 = graph_cb(df,ax1)
+    ax2 = plt.subplot(212)
+    ax2 = graph_ldi(df,ax2)
+    fig.subplots_adjust(hspace=0.5)
+    
+    plt.savefig(filename)
 
 def criterio_brasil(df):
     ''
@@ -91,6 +118,7 @@ def anonimizar(df):
     del df['ID']
     del df['Instituição']
     del df['Departamento']
+    
     return df
 
 def convert2df(filename):
@@ -119,7 +147,7 @@ def main(options,filename = None):
         print "processing: %s" % filename
     df = convert2df(filename)
     df = process(df)
-    if options.outfile or options.save:
+    if options.save:
         if not options.outfile:
             root, ext = os.path.splitext(filename)
             outfile = root + '-processed.csv'
@@ -133,6 +161,11 @@ def main(options,filename = None):
             return 1
         writeprocessed(df,outfile)
         return 0
+    if options.graph:
+        if not options.outfile:
+            print "Need a filename for the graph"
+            return 1
+        make_graphs(df,options.outfile)
     
 
 if __name__ == "__main__":
@@ -148,9 +181,13 @@ if __name__ == "__main__":
                       action = 'store_true')
     
     parser.add_option('--outfile', '-o',
-                      help   = 'Dataframe output filename',
+                      help   = 'Output filename',
                       dest   = 'outfile',
                       action = 'store')
+
+    parser.add_option('--graph', '-g',
+                      help   = 'Make the graphs',
+                      action = 'store_true')
 
 
     (options, args) = parser.parse_args()
