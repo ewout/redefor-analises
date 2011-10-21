@@ -492,7 +492,7 @@ def ativtutores(courseid):
         fp.write(str(l2u(username(i)))+'\t'+str(logcount(i, courseid))+'\t'+str(logcount(i, courseid,'forum'))+'\t'+str(logcount(i,courseid,'dialogue'))+'\t'+str(logcount(i,courseid,'dialogue','add entry'))+'\n')
     fp.close()
     
-def logcount(userid=None, courseid=None, mod=None, act=None):
+def logcount(userid=None, courseid=None, mod=None, act=None,from_cache=True,moodle='moodle_redefor'):
     if userid is None:
         if courseid is None:
             if mod is None:
@@ -540,10 +540,10 @@ def logcount(userid=None, courseid=None, mod=None, act=None):
                 else:
                     w = '''where userid = %s and course = %s and module = "%s" and action="%s"''' %(userid, courseid, mod, act)
     query = "select count(*) from mdl_log "+w
-    return loaddata(query)[0,0]
+    return loaddata(query,from_cache=from_cache,moodle=moodle)[0,0]
 
 
-def active_courses(n_actions, start = None, stop=None):
+def active_courses(n_actions, start = None, stop=None, moodle='moodle_redefor'):
     '''Returns array of course ids with at least n_actions between start and stop.
     Start and stop are tuples of the form (year, month), for example (2010,1) for Jan. 2010'''
 
@@ -552,12 +552,12 @@ def active_courses(n_actions, start = None, stop=None):
     else:
         starts = time.mktime((start[0],start[1],0,0,0,0,0,0,0))
     if not stop:
-        stop = time.localtime()
+        stops = time.localtime()
     else:
         stops = time.mktime((stop[0],stop[1],0,0,0,0,0,0,0))
 
     query = 'SELECT course, count(*) n FROM mdl_log m where time between %s and %s and course <> 0 and course <> 1  group by course having count(*) > %s order by count(*) desc' % (starts,stops,n_actions)
-    X = loaddata(query)
+    X = loaddata(query,from_cache=False,moodle=moodle)
     if X.any():
         return X[:,0]
     else:
