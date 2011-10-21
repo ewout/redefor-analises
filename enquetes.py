@@ -26,20 +26,43 @@ def graph_cb(df,ax):
     ax.set_title(u'Critério Brasil')
     return ax
 
+def graph_cb_bar(df,ax):
+    ''
+    cb = df['classe_cb']
+    c = Counter(cb)
+    labels = sorted(c.keys())
+    values = [c[val] for val in labels]
+    N = len(labels)
+    x = np.arange(N)
+    width = 0.6
+    ax.bar(x,values,width,color='r')
+
+    ax.set_title(u'Critério Brasil')
+    ax.set_xticks(x+width)
+    ax.set_xticklabels(labels)
+
 def graph_ldi(df,ax):
     ''
-    plt.hist(df['ldi15'],rwidth=0.8)
+    ldi = df['ldi15']
+    plt.hist(ldi,rwidth=0.8)
     ax.set_title(u'Indice de Literacia Digital\nEscala de 15 itens (0-4)')
+    mean = unicode(round(ldi.mean()))
+    std = unicode(round(ldi.std()))
+    ax.text(0.6,0.85,u'Média = '+ mean + u'\nDesvio Padrão = ' + std,transform=ax.transAxes)
 
     return ax
 
 def make_graphs(df,filename):
     ''
+    name,ext = os.path.splitext(filename)
     fig = plt.figure(figsize =(6,10))
+    fig.text(0.02,0.95,unicode(name,'utf8'),fontsize=20)
     ax1 = plt.subplot(211)
-    ax1 = graph_cb(df,ax1)
+    #ax1.set_aspect('equal')
+    ax1 = graph_cb_bar(df,ax1)
     ax2 = plt.subplot(212)
     ax2 = graph_ldi(df,ax2)
+
     fig.subplots_adjust(hspace=0.5)
     
     plt.savefig(filename)
