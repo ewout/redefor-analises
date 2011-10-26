@@ -7,7 +7,7 @@
 # Author: Ewout ter Haar <ewout@usp.br>
 # License: Apache 
 
-import sys, os
+import sys, os, hashlib
 from optparse import OptionParser
 
 import numpy as np
@@ -17,6 +17,11 @@ import pandas
 from collections import Counter
 
 DATA_DIR = '~/Dropbox/ATP/Pesquisa/Data/'
+
+def para_curso_e_grupo(df):
+    ''
+    
+    return df
 
 def graph_cb(df,ax):
     ''
@@ -132,12 +137,16 @@ def calc_lit_digital_index(df):
 def anonimizar(df):
     '''Filter personally identifying information like name, idnumbers, etc.
 
+    We hash the Moodle userid to make another ID which will allow us to
+    follow a user between surveys.
+
     But we must be realist: it is very dificult to anonimize data
     without making it useless. Vigilance is required!
     '''
     del df['Nome de usuário']
     del df['Nome completo']
     del df['NumeroUSP']
+    df['RFID'] = df['ID'].map(lambda x: int(hashlib.md5(str(x)).hexdigest(),base=16) % 2**16)
     del df['ID']
     del df['Instituição']
     del df['Departamento']
@@ -149,11 +158,15 @@ def convert2df(filename):
     df = pandas.read_table(filename,sep='\t')
     return df
 
-def process(df):
+def process(df,enq_no):
     ''
+    if enq_no == 1:
+        df = criterio_brasil(df)
+        df = calc_lit_digital_index(df)
+    elif enq_no == 2:
+        df = para_curso_e_grupo(df)
+
     df = anonimizar(df)
-    df = criterio_brasil(df)
-    df = calc_lit_digital_index(df)
     return df
 
 def writeprocessed(df,filename):
@@ -169,7 +182,7 @@ def main(options,filename = None):
     if options.verbose:
         print "processing: %s" % filename
     df = convert2df(filename)
-    df = process(df)
+    df = process(df,options.enq_no)
     if options.save:
         if not options.outfile:
             root, ext = os.path.splitext(filename)
@@ -211,6 +224,12 @@ if __name__ == "__main__":
     parser.add_option('--graph', '-g',
                       help   = 'Make the graphs',
                       action = 'store_true')
+
+    parser.add_option('--no', '-n',
+                      type   = 'int',
+                      help   = 'Number of the Enquete',
+                      action = 'store',
+                      dest   = 'enq_no')
 
 
     (options, args) = parser.parse_args()
