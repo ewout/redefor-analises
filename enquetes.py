@@ -16,10 +16,27 @@ import matplotlib.mlab as mlab
 import pandas
 from collections import Counter
 
-DATA_DIR = '~/Dropbox/ATP/Pesquisa/Data/'
+DATA_DIR = '/home/ewout/Dropbox/ATP/Pesquisa/Data/'
 
-def para_curso_e_grupo(df):
+def add_curso_e_grupo(df):
     ''
+    users = pandas.read_table(DATA_DIR+'username-course-group-redefor-11.csv',sep=',')
+    
+    def find_username(username,detail):
+        try:
+            user = users.xs(username)
+            return user[detail]
+        except KeyError:
+            return 'Nenhum'
+
+    username_course = lambda username: find_username(username,'course1')
+    username_group = lambda username: find_username(username,'group1')
+    username_role = lambda username: find_username(username,'role1')
+
+    username = df['Nome de usuário']
+    df['Curso'] = username.map(username_course)
+    df['Grupo'] = username.map(username_group)
+    df['Papel'] = username.map(username_role)
     
     return df
 
@@ -164,7 +181,7 @@ def process(df,enq_no):
         df = criterio_brasil(df)
         df = calc_lit_digital_index(df)
     elif enq_no == 2:
-        df = para_curso_e_grupo(df)
+        df = add_curso_e_grupo(df)
 
     df = anonimizar(df)
     return df
