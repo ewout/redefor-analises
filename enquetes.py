@@ -163,7 +163,7 @@ def anonimizar(df):
     del df['Nome de usuário']
     del df['Nome completo']
     del df['NumeroUSP']
-    df['RFID'] = df['ID'].map(lambda x: int(hashlib.md5(str(x)).hexdigest(),base=16) % 2**16)
+    df['RFID'] = df['ID'].map(lambda x: int(hashlib.md5(str(x)).hexdigest(),base=16) % 2**28)
     del df['ID']
     del df['Instituição']
     del df['Departamento']
@@ -183,6 +183,7 @@ def process(df,enq_no):
     elif enq_no == 2:
         df = add_curso_e_grupo(df)
 
+    df = deduplicar(df)
     df = anonimizar(df)
     return df
 
