@@ -527,7 +527,7 @@ def logcount(userid=None, courseid=None, mod=None, act=None,from_cache=True,mood
                 if act is None:
                     w = '''where userid = %s and module = "%s"'''%(userid, mod)
                 else:
-                    w = '''where userid = %s and modlue = "%s" and action="%s"''' %(userid, mod, act)
+                    w = '''where userid = %s and module = "%s" and action="%s"''' %(userid, mod, act)
         else:
             if mod is None:
                 if act is None:
