@@ -9,6 +9,7 @@
 
 import sys, os, hashlib
 from optparse import OptionParser
+import config
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -154,16 +155,26 @@ def calc_lit_digital_index(df):
 def anonimizar(df):
     '''Filter personally identifying information like name, idnumbers, etc.
 
-    We hash the Moodle userid to make another ID which will allow us to
+    We map the Moodle userid to make another ID which will allow us to
     follow a user between surveys.
 
     But we must be realist: it is very dificult to anonimize data
     without making it useless. Vigilance is required!
     '''
+
+    def RFID_map(seed,N):
+        'Return dict with some permutation of range(N)'
+        import random
+        random.seed(seed)
+        ids = range(N)
+        random.shuffle(ids)
+        return dict(zip(range(N),ids))
+    
     del df['Nome de usuário']
     del df['Nome completo']
     del df['NumeroUSP']
-    df['RFID'] = df['ID'].map(lambda x: int(hashlib.md5(str(x)).hexdigest(),base=16) % 2**28)
+    mapping = RFID_map(config.seed,100000)
+    df['RFID'] = df['ID'].map(mapping)
     del df['ID']
     del df['Instituição']
     del df['Departamento']
@@ -175,6 +186,12 @@ def convert2df(filename):
     df = pandas.read_table(filename,sep='\t')
     return df
 
+def deduplicar(df,field):
+    ''
+    grouped = df.groupby(field)
+    index = [gp_keys[0] for gp_keys in grouped.groups.values()]
+    return df.reindex(index)
+
 def process(df,enq_no):
     ''
     if enq_no == 1:
@@ -183,7 +200,7 @@ def process(df,enq_no):
     elif enq_no == 2:
         df = add_curso_e_grupo(df)
 
-    df = deduplicar(df)
+    df = deduplicar(df,'ID')
     df = anonimizar(df)
     return df
 
