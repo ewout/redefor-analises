@@ -192,6 +192,17 @@ def deduplicar(df,field):
     index = [gp_keys[0] for gp_keys in grouped.groups.values()]
     return df.reindex(index)
 
+def dividir(df,field, include_keys=None):
+    '''return list  of (value,dataframe) tuples, where dataframes
+    contain only rows grouped by values of field'''
+    grouped = df.groupby(field)
+    if np.iterable(include_keys):
+        dfs = [(key,df.reindex(index)) for key, index in grouped.groups.iteritems() if key in include_keys]
+    else:
+        dfs = [(key,df.reindex(index)) for key, index in grouped.groups.iteritems()]
+    return dfs
+
+
 def process(df,enq_no):
     ''
     if enq_no == 1:
@@ -212,26 +223,30 @@ def writeprocessed(df,filename):
     #df.to_csv(filename,index=False)
 
 
-def main(options,filename = None):
+def main(options,filename):
     ''
     if options.verbose:
         print "processing: %s" % filename
     df = convert2df(filename)
     df = process(df,options.enq_no)
     if options.save:
-        if not options.outfile:
-            root, ext = os.path.splitext(filename)
-            outfile = root + '-processed.csv'
-        else:
-            outfile = options.outfile
-            
+        root, ext = os.path.splitext(filename)
+        outfile = root + '-processed.csv'
         if options.verbose:
             print "Saving to %s" % outfile
-        if os.path.abspath(outfile) == os.path.abspath(filename):
-            print "Outfile must be different from input file"
-            return 1
         writeprocessed(df,outfile)
         return 0
+
+    if options.splitfield:
+        dfs = dividir(df,options.splitfield)
+        for name, df in dfs:
+            root, ext = os.path.splitext(filename)
+            outfile = root + '-'+ name + '-processed.csv'
+            if options.verbose:
+                print "Saving to %s" % outfile
+            writeprocessed(df,outfile)
+        return 0
+        
     if options.graph:
         if not options.outfile:
             print "Need a filename for the graph"
@@ -250,11 +265,17 @@ if __name__ == "__main__":
     parser.add_option('--save', '-s',
                       help   ='Save processed output (tab seperated)',
                       action = 'store_true')
-    
-    parser.add_option('--outfile', '-o',
-                      help   = 'Output filename',
-                      dest   = 'outfile',
+
+    parser.add_option('--dividir', '-d',
+                      help   ='Dividir em N arquivos, por Papel ou Curso',
+                      type   = 'string',
+                      dest   = 'splitfield',
                       action = 'store')
+    
+#    parser.add_option('--outfile', '-o',
+#                      help   = 'Output filename',
+#                      dest   = 'outfile',
+#                      action = 'store')
 
     parser.add_option('--graph', '-g',
                       help   = 'Make the graphs',
