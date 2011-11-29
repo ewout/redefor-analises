@@ -17,7 +17,7 @@ import matplotlib.mlab as mlab
 import pandas
 from collections import Counter
 
-DATA_DIR = '/home/ewout/Dropbox/ATP/Pesquisa/Data/'
+DATA_DIR = '/home/ewout/Dropbox/ATP/Pesquisa/Data/2011 - Cursistas/'
 
 def add_curso_e_grupo(df):
     ''
@@ -172,7 +172,7 @@ def anonimizar(df):
     
     del df['Nome de usuário']
     del df['Nome completo']
-    del df['NumeroUSP']
+    #del df['NumeroUSP']
     mapping = RFID_map(config.seed,100000)
     df['RFID'] = df['ID'].map(mapping)
     del df['ID']
@@ -229,11 +229,11 @@ def main(options,filename):
         print "processing: %s" % filename
     df = convert2df(filename)
     df = process(df,options.enq_no)
-    if options.save:
-        root, ext = os.path.splitext(filename)
-        outfile = root + '-processed.csv'
-        if options.verbose:
-            print "Saving to %s" % outfile
+
+    root, ext = os.path.splitext(filename)
+    outfile = root + '-processed.csv'
+    if options.verbose:
+        print "Saving to %s" % outfile
         writeprocessed(df,outfile)
         return 0
 
@@ -262,20 +262,11 @@ if __name__ == "__main__":
                       help   ='print debugging output',
                       action = 'store_true')
 
-    parser.add_option('--save', '-s',
-                      help   ='Save processed output (tab seperated)',
-                      action = 'store_true')
-
     parser.add_option('--dividir', '-d',
                       help   ='Dividir em N arquivos, por Papel ou Curso',
                       type   = 'string',
                       dest   = 'splitfield',
                       action = 'store')
-    
-#    parser.add_option('--outfile', '-o',
-#                      help   = 'Output filename',
-#                      dest   = 'outfile',
-#                      action = 'store')
 
     parser.add_option('--graph', '-g',
                       help   = 'Make the graphs',
