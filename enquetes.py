@@ -172,9 +172,12 @@ def anonimizar(df):
     
     del df['Nome de usuário']
     del df['Nome completo']
-    #del df['NumeroUSP']
+    del df['NumeroUSP']
+    # Aqui indexamos o dataframe com um número mapeado 1-1 com
+    # o Moodle ID. Assim podemos comparar usuários entre
+    # enquetes. Deixamos o número USP por agora, para fazer testes.
     mapping = RFID_map(config.seed,100000)
-    df['RFID'] = df['ID'].map(mapping)
+    df.index = df['ID'].map(mapping)
     del df['ID']
     del df['Instituição']
     del df['Departamento']
@@ -222,45 +225,83 @@ def writeprocessed(df,filename):
     mlab.rec2csv(rec,filename,delimiter='\t')
     #df.to_csv(filename,index=False)
 
-
-def main(options,filename):
+def joinfiles(filenames):
     ''
-    if options.verbose:
-        print "processing: %s" % filename
-    df = convert2df(filename)
-    df = process(df,options.enq_no)
 
-    root, ext = os.path.splitext(filename)
-    outfile = root + '-processed.csv'
-    if options.verbose:
-        print "Saving to %s" % outfile
-        writeprocessed(df,outfile)
-        return 0
+    dfs = []
+    for filename in filenames:
+        print "converting " + filename
+        dfs.append(convert2df(filename))
 
-    if options.splitfield:
-        dfs = dividir(df,options.splitfield)
-        for name, df in dfs:
-            root, ext = os.path.splitext(filename)
-            outfile = root + '-'+ name + '-processed.csv'
-            if options.verbose:
-                print "Saving to %s" % outfile
-            writeprocessed(df,outfile)
-        return 0
-        
-    if options.graph:
-        if not options.outfile:
-            print "Need a filename for the graph"
+    dftotal = dfs[0]
+    samecolumns = dfs[0].columns == dfs[1].columns
+    try:
+        if samecolumns.all():
+            print "Same columns: trying append vertically to join"
+            if np.intersect1d(dfs[0].index.tolist(),dfs[1].index.tolist()).any():
+                print "Warning: some indexes of first two files are the same!"
+
+            for i in range(1,len(dfs)):
+                dftotal = dftotal.append(dfs[i])
+            
+    except AttributeError:
+        if not samecolumns:    
+            print "Diferent columns: trying to join horizontally"
+            for i in range(1,len(dfs)):
+                #dftotal = dftotal.join(dfs[i],how='outer',lsuffix='_left')
+                dftotal = dftotal.join(dfs[i],how='inner',lsuffix='_left')
+
+    return dftotal
+
+
+
+def main(options,filenames):
+    ''
+
+    if options.join:
+       if not options.outfile:
+            print "Need outfile"
             return 1
-        make_graphs(df,options.outfile)
+ 
+       df = joinfiles(filenames)
+       print "Saving to %s" % options.outfile
+       
+       writeprocessed(df,options.outfile)
+       return 0
+    
+    for filename in filenames:
+
+        print "processing: %s" % filename
+        df = convert2df(filename)
+        df = process(df,options.enq_no)
+
+        if options.splitfield:
+            dfs = dividir(df,options.splitfield)
+            for name, df in dfs:
+                root, ext = os.path.splitext(filename)
+                outfile = root + '-'+ name + '-processed.csv'
+                print "Saving to %s" % outfile
+                writeprocessed(df,outfile)
+        else:
+            root, ext = os.path.splitext(filename)
+            outfile = root + '-processed.csv'
+            print "Saving to %s" % outfile
+            writeprocessed(df,outfile)
+        
+        if options.graph:
+            root, ext = os.path.splitext(filename)
+            outfile = root + '-graph.png'
+            print "Making graphs and saving to ", outfile
+            make_graphs(df,outfile)
+    
+    return 0
+
     
 
 if __name__ == "__main__":
 
     usage = "usage: %prog [options] [filename]"
     parser = OptionParser(usage=usage)
-    parser.add_option('--verbose', '-v',
-                      help   ='print debugging output',
-                      action = 'store_true')
 
     parser.add_option('--dividir', '-d',
                       help   ='Dividir em N arquivos, por Papel ou Curso',
@@ -268,9 +309,20 @@ if __name__ == "__main__":
                       dest   = 'splitfield',
                       action = 'store')
 
+    parser.add_option('--join', '-j',
+                      help   ='Juntar N arquivos, alignando os índices',
+                      action = 'store_true')
+
+
     parser.add_option('--graph', '-g',
                       help   = 'Make the graphs',
                       action = 'store_true')
+
+    parser.add_option('--outfile', '-o',
+                      help   = 'Name of the output graph / join file',
+                      action = 'store',
+                      dest   = 'outfile')
+
 
     parser.add_option('--no', '-n',
                       type   = 'int',
@@ -278,11 +330,10 @@ if __name__ == "__main__":
                       action = 'store',
                       dest   = 'enq_no')
 
+    
 
     (options, args) = parser.parse_args()
-    if(len(args) != 1):
-        parser.error("Especifique um (1) arquivo")
-    else:
-        filename = args[0]
-    
-    sys.exit(main(options,filename))
+    if(len(args) == 0):
+        parser.error("Especifique pelo menos um (1) arquivo")
+
+    sys.exit(main(options,args))
