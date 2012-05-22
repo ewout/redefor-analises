@@ -17,30 +17,30 @@ moodles = {'stoa':'moodle',
 
 
 # id dos curso dos modulos 1, 2, 3 e 4
-courseids1 = [14,15,24,25,26,21,34]
+courseids1 = [14,15,24,25,26,21,34,104]
 courseids2 = []
 courseids3 = []
 courseids4 = []
 
 # id da nota AVA dos curso dos modulos 1, 2, 3 e 4
-idnotava1 = [84,215,1159,1602,[1905,1906],[1621,1622],[1603,1604]]
+idnotava1 = [84,215,1159,1602,[1905,1906],[1621,1622],[1603,1604],[3142,3147]]
 idnotava2 = []
 idnotava3 = []
 idnotava4 = []
 
 # id da nota da prova presencial dos curso dos modulos 1, 2, 3 e 4
-idpp1 = [1560,1561,1564,1565,743,1571,1572]
-idpp2 = [1560,1561,1564,1565,743,1571,1572]
+idpp1 = [1560,1561,1564,1565,743,1571,1572,3144]
+idpp2 = [1560,1561,1564,1565,743,1571,1572,3144]
 
 # id da frequencia AVA dos curso dos modulos 1, 2, 3 e 4
-idfreqava1 = [899,906,909,912,869,[917,922],[916,923]]
+idfreqava1 = [899,906,909,912,869,[917,922],[916,923],[916,916]]
 idfreqava2 = []
 
 day0 = time.mktime((2010,10,4,0,0,0,0,0,0))
 
 prefix = "mdl_"
 
-def loaddata(query,from_cache=True, moodle='moodle_redefor'):
+def loaddata(query,from_cache=False, moodle='moodle_redefor'):
 
     if from_cache:
         queryhash = hashlib.md5(query+moodle).hexdigest()
@@ -49,7 +49,6 @@ def loaddata(query,from_cache=True, moodle='moodle_redefor'):
             return np.load(fpath)
         except IOError as msg:
             print msg
-            
     db = mysql.connect(host=config.host,user=config.user,passwd=config.passwd,db=moodle)
     c = db.cursor()
     c.execute(query)
@@ -364,27 +363,30 @@ def infoaluno(courseid, saida=recarray):
                         notapp.append('')
                         
                     #Frequencia
-                    if type(idfreqava1[i]) == list:
+                    try:
+                        if type(idfreqava1[i]) == list:
                         
-                        f1 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idfreqava1[i][0],u))
-                        if f1.any():    
-                            freqava1.append(f1[0,0])
+                            f1 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idfreqava1[i][0],u))
+                            if f1.any():    
+                                freqava1.append(f1[0,0])
+                            else:
+                                freqava1.append('')
+                                
+                                f2 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idfreqava1[i][1],u))
+                                if f2.any():
+                                    freqava2.append(f2[0,0])
+                                else:
+                                    freqava2.append('')
+                                    
                         else:
-                            freqava1.append('')
-
-                        f2 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idfreqava1[i][1],u))
-                        if f2.any():
-                            freqava2.append(f2[0,0])
-                        else:
+                            f1 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idfreqava1[i],u))
+                            if f1.any():
+                                freqava1.append(f1[0,0])
+                            else:
+                                freqava1.append('')
                             freqava2.append('')
-
-                    else:
-                        f1 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idfreqava1[i],u))
-                        if f1.any():
-                            freqava1.append(f1[0,0])
-                        else:
-                            freqava1.append('')
-                        freqava2.append('')
+                    except:
+                        pass
                     
     nusp = array(nusp)
     grupo = array(grupo)

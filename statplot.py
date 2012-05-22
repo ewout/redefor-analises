@@ -3,7 +3,7 @@
 
 from pylab import *
 from mdlib import *	
-from matplotlib.ticker import MultipleLocator
+from matplotlib.ticker import MultipleLocator, MaxNLocator
 from matplotlib import cm
 from statlib import lorenz, gini
 import time
@@ -299,28 +299,40 @@ def notas_fuvest(fn, gtitle="Notas", notascol = 'pontos11', curcol='curusp'):
     cursos = {
         480100007 : u'Ciências',
         410100001 : u'Biologia',
+        480100018 : u'Sociologia',
         480100015 : u'Diretores',
         810100001 : u'Supervisores',
         480100011 : u'Coordenadores'
         }
 
-    fig = plt.figure()
-    fig.text(0.5,0.975,gtitle,horizontalalignment='center',verticalalignment='top')
+    fig = plt.figure(figsize=(10,8))
+    fig.text(0.5,1,gtitle,horizontalalignment='center',verticalalignment='top')
     p = arange(0,40,0.1)
-    axt = fig.add_subplot(3,2,6)
+    #axt = fig.add_subplot(3,2,6)
 
     for i,curso in enumerate(cursos):
-        curso
         notas = [x[notascol] for x in prova if x[curcol] == curso]
+        notas = array(notas)*10.0/28
+        for j, nota in enumerate(notas):
+            if nota > 10:
+                notas[j] = 10.0
+            else:
+                notas[j] = nota
         kde = gaussian_kde(array(notas)*1.0)
-        line = axt.plot(p,kde(p),'-')
-        color = line[-1].get_color()
         ax = fig.add_subplot(3,2,i+1)
-        ax.hist(notas,normed=True,rwidth=0.9,color=color)
-        ax.set_xlim(0,40)
-        ax.set_ylim(0,0.12)
+        #line = ax.plot(p,kde(p),'-')
+        #color = line[-1].get_color()
+        ax.hist(notas,[0,1,2,3,4,5,6,7,8,9,10],normed=True,rwidth=0.9)
+        ax.set_xlim(0,10)
+        ax.set_ylim(0,1)
+        ax.xaxis.set_major_locator(MaxNLocator(5))
+        ax.yaxis.set_major_locator(MaxNLocator(5))
         ax.text(0.05,0.82,cursos[curso]+u' N = '+unicode(len(notas)),transform=ax.transAxes)
 
+    plt.tight_layout()
+        
+    return fig
+        
 
 def quiz_attempts_plot(quizids):
     for quizid in quizids:
@@ -369,7 +381,8 @@ def main():
 #        acoes_visu2(cid,start=5,end=10,plottype='heatmap')
 #        savefig('acoes-visu-5-10'+str(cid)+'.png')
 #    notas_fuvest('redefor2011a-1-fuvest8abr2011.csv',u'Redefor 2011-04-08, prova Módulo 1 e 2')
-    notas_fuvest('redefor2011-prova2.csv',u'Redefor 2011-09-03, prova Módulo 3 e 4','pontos1','codcur')
+#    notas_fuvest('redefor2011-prova2.csv',u'Redefor 2011-09-03, prova Módulo 3 e 4','pontos1','codcur')
+    notas_fuvest('redefor2012-prova1.csv',u'Redefor 2012-14-04, prova Módulo 1 e 2','PONTOS','codcur')
 
     show()
 

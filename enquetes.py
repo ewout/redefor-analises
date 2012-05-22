@@ -213,6 +213,9 @@ def process(df,enq_no):
         df = calc_lit_digital_index(df)
     elif enq_no == 2:
         df = add_curso_e_grupo(df)
+    elif enq_no == 3:
+        df = add_curso_e_grupo(df)
+
 
     df = deduplicar(df,'ID')
     df = anonimizar(df)
