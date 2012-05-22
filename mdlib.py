@@ -25,7 +25,7 @@ courseids4 = []
 # id da nota AVA dos curso dos modulos 1, 2, 3 e 4
 idnotava1 = [84,215,1159,1602,[1905,1906],[1621,1622],[1603,1604],[3142,3147]]
 idnotava2 = []
-idnotava3 = []
+idnotava3 = [sdfasdfasdfasdfasdfasdf]
 idnotava4 = []
 
 # id da nota da prova presencial dos curso dos modulos 1, 2, 3 e 4
