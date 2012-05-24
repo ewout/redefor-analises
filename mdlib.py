@@ -25,7 +25,7 @@ courseids4 = []
 # id da nota AVA dos curso dos modulos 1, 2, 3 e 4
 idnotava1 = [84,215,1159,1602,[1905,1906],[1621,1622],[1603,1604],[3142,3147]]
 idnotava2 = []
-idnotava3 = [sdfasdfasdfasdfasdfasdf]
+idnotava3 = []
 idnotava4 = []
 
 # id da nota da prova presencial dos curso dos modulos 1, 2, 3 e 4
@@ -40,7 +40,7 @@ day0 = time.mktime((2010,10,4,0,0,0,0,0,0))
 
 prefix = "mdl_"
 
-def loaddata(query,from_cache=False, moodle='moodle_redefor'):
+def loaddata(query,from_cache=True, moodle='moodle_redefor'):
 
     if from_cache:
         queryhash = hashlib.md5(query+moodle).hexdigest()
@@ -62,8 +62,8 @@ def loaddata(query,from_cache=False, moodle='moodle_redefor'):
 
 def courseinfo(courseid):
     X = loaddata('select * from mdl_course where id = %s' % courseid)
-    cinfo = {'fullname': X[0,4],
-             'shortname': X[0,5]}
+    cinfo = {'fullname': l2u(X[0,4]),
+             'shortname': l2u(X[0,5])}
     return cinfo
 
 def course2context(courseid):
@@ -73,7 +73,7 @@ def course2context(courseid):
 
 def courseusers(courseid):
     ''
-    query = '''SELECT u.firstname, u.lastname, u.id, la.timeaccess, c.shortname, c.fullname 
+    query = '''SELECT u.firstname, u.lastname, u.id, la.timeaccess, c.shortname, c.fullname, u.idnumber
     FROM mdl_course c
     INNER JOIN mdl_context cx ON c.id = cx.instanceid
     AND cx.contextlevel = '50' and c.id=%s
@@ -83,13 +83,17 @@ def courseusers(courseid):
     INNER JOIN mdl_user_lastaccess la ON la.userid = u.id and la.courseid = %s order by la.timeaccess desc''' % (courseid,courseid)
 
     X = loaddata(query)
-    cinfo = {'firstname': X[:,0],
-             'lastname': X[:,1],
+    if X.size:
+        cinfo = {'firstname': [l2u(x) for x in X[:,0]],
+             'lastname': [l2u(x) for x in X[:,1]],
              'userid': [int(x) for x in X[:,2]],
              'lastaccess': [float(x) for x in (X[:,3])],
              'cshortname': X[:,4],
-             'cfullname': X[:,5]}
-    return cinfo
+             'cfullname': X[:,5],
+             'idnumber': [int(x) if x else '' for x in X[:,6]]}
+        return cinfo
+    else:
+        return False
     
 def lastaccess(courseid=None):
     'usuários com lastaccess < t vs t'
