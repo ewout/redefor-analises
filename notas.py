@@ -36,12 +36,28 @@ def itemname(gradeitem):
 
 def notas(userids,gradeitem):
     ''
+
+    def scalenota(gradeitem):
+        result = loaddata('select scaleid from mdl_grade_items where id = %s' % gradeitem, moodle='moodle_redefor')
+        if result:
+            scaleid = result[0,0]
+            result = loaddata('select scale from mdl_scale where id = %s' % scaleid,moodle='moodle_redefor')
+            if result:
+                scale = result[0,0].split(',')
+                return lambda x: scale[x-1]
+
+        
     def nota (userid,gradeitem): 
         result = loaddata('select finalgrade from mdl_grade_grades where itemid = %s and userid = %s' % (gradeitem,userid),from_cache=False,moodle='moodle_redefor')
         if result:
             return result[0,0]
 
-    return [nota(userid,gradeitem) for userid in userids]
+    notas = [nota(userid,gradeitem) for userid in userids]
+    scale = scalenota(gradeitem)
+    if scale:
+        return [scale(int(nota)) if nota else None for nota in notas]
+    else:
+        return notas
 
 def frame(course):
     ''
@@ -56,18 +72,38 @@ def frame(course):
             thisframe = pandas.DataFrame({'userid':userids})
             if first:
                 frame = thisframe
-                frame['firstname'] = users['firstname']
-                frame['lastname'] = users['lastname']
-                frame['idnumber'] = users['idnumber']
+                frame['Nome AVA'] = users['firstname']
+                frame['Sobrenome AVA'] = users['lastname']
+            
+                frame['Número USP'] = users['idnumber']
+                frame['Nome Apolo'] = [pessoa(codpes)['nompes'] if codpes else '' for codpes in users['idnumber']]
                 frame[gradename] = grades
                 first = False
                 continue
             thisframe[gradename] = grades
             # usamos um pandas.DataFrame para poder alinhar (join) as notas pelo userid facilmente        
             frame = pandas.merge(frame,thisframe, on = 'userid', how='outer')
-    
+
+    # agora as colunas "atividade" dos ambientes
+    ambientes = [ambiente for (ambiente, gradeitem) in course]
+    #unique and sorted
+    ambientes = sorted(list(set(ambientes)))
+    for ambiente in ambientes:
+        users = courseusers(ambiente)
+        coursename = courseinfo(ambiente)['shortname']
+        if users:
+            userids = users['userid']
+            thisframe = pandas.DataFrame({'userid':userids})
+            thisframe['Atividade '+coursename] = [ativuser(userid,ambiente) for userid in userids]
+            frame = pandas.merge(frame,thisframe, on = 'userid', how='outer')
+            
+
+    # remover id do moodle antes de publicar
+    del frame['userid'] 
     return frame
 
+def moodle_date():
+    return loaddata('select from_unixtime(time) from mdl_log order by time desc limit 1',moodle='moodle_redefor')[0,0]
 
 def query_yes_no(question, default="sim"):
     valid = {"sim":"sim",   "s":"sim",
@@ -92,18 +128,24 @@ def query_yes_no(question, default="sim"):
             sys.stdout.write("Responda com  'sim' ou 'não' "\
                              "(ou 's' or 'n').\n")
 
-def export_grades(courses,d='notas/'):
+def export_grades(courses,d='notas/', sync=False):
     ''
-    import os
+    import os, subprocess
     if not os.path.exists(d):
         makedir = query_yes_no("diretório "+d+" não existe. Criar?")
         if makedir == "sim":
             os.makedirs(d)
         else:
             return
+    moodledate = moodle_date()
+    dstr =  '-' + moodledate.strftime('%Y-%m-%d')
     for coursename,course in courses.iteritems():
         df = frame(course)
-        df.to_csv(os.path.join(d+'/',coursename+'.csv'),index=False)
+        df.to_csv(os.path.join(d+'/',coursename+dstr+'.csv'),index=False)
+    if sync:
+        rstr = "rsync -av "+d+" atp.usp.br:/var/www/dados/redefor/"
+        print rstr
+        subprocess.call(rstr,shell=True)
 
 if __name__ == '__main__':
-    export_grades(courses)
+    export_grades(courses,'/home/ewout/redefor-analises/dados/notas', sync=True)

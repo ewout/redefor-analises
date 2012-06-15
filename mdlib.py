@@ -59,6 +59,23 @@ def loaddata(query,from_cache=True, moodle='moodle_redefor'):
     return array(results)
 
 
+def pessoa(nusp):
+    ''
+    X = loaddata('select * from pessoa where codpes = %s' % nusp, moodle='usp')
+    pinfo = {'nompes': X[0,2],
+             'sexpes': X[0,4],
+             'dtanas' : X[0,5]
+             }
+    return pinfo
+
+def cpf2codpes(cpf):
+    ''
+    cpf = int(cpf)
+    salt = config.cpfsalt
+    cpfhash = hashlib.md5(salt+str(cpf)).hexdigest()
+    X = loaddata('select codpes from pessoa where numcpf = "%s"' % cpfhash, moodle='usp')
+    if X:
+        return X[0,0]
 
 def courseinfo(courseid):
     X = loaddata('select * from mdl_course where id = %s' % courseid)
