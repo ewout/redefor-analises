@@ -10,6 +10,7 @@
 import sys, os, hashlib
 from optparse import OptionParser
 import config
+import mdlib
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -21,7 +22,7 @@ DATA_DIR = '/home/ewout/Dropbox/ATP/Pesquisa/Data/2011 - Cursistas/'
 
 def add_curso_e_grupo(df):
     ''
-    users = pandas.read_table(DATA_DIR+'username-course-group-redefor-11.csv',sep=',')
+    users = pandas.read_table(DATA_DIR+'username-course-group-redefor-11.csv',sep=',',index_col=0)
     
     def find_username(username,detail):
         try:
@@ -38,8 +39,35 @@ def add_curso_e_grupo(df):
     df['Curso'] = username.map(username_course)
     df['Grupo'] = username.map(username_group)
     df['Papel'] = username.map(username_role)
-    
+
     return df
+
+def add_sexo(df):
+    ''
+    def codpes_sexo(codpes):
+        try:
+            codpes = int(codpes)
+            return mdlib.pessoa(codpes)['sexpes']
+        except ValueError:
+            return
+
+    codpes = df['NumeroUSP']
+    df['Sexo'] = codpes.map(codpes_sexo) 
+    return df
+
+def add_nasc(df):
+    ''
+    def codpes_nasc(codpes):
+        try:
+            codpes = int(codpes)
+            return mdlib.pessoa(codpes)['dtanas']
+        except ValueError:
+            return
+    
+    codpes = df['NumeroUSP']
+    df['DataNasc'] =  codpes.map(codpes_nasc) 
+    return df
+
 
 def graph_cb(df,ax):
     ''
@@ -186,7 +214,7 @@ def anonimizar(df):
 
 def convert2df(filename):
     ''
-    df = pandas.read_table(filename,sep='\t')
+    df = pandas.read_table(filename,sep='\t',index_col=0)
     return df
 
 def deduplicar(df,field):
@@ -216,7 +244,8 @@ def process(df,enq_no):
     elif enq_no == 3:
         df = add_curso_e_grupo(df)
 
-
+    df = add_sexo(df)
+    df = add_nasc(df)
     df = deduplicar(df,'ID')
     df = anonimizar(df)
     return df
