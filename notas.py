@@ -17,7 +17,7 @@ supervisores = [(94,2453),(94,3408),(94,6121),(94,3410),(94,6123),(136,3752),(13
 coordenadores = [(92,2374),(92,2362),(92,6125),(92,2378),(92,6126),(133,3446),(133,6127),(133,3453),(133,6128),(161,5206),(161,5208),(144,3860),(144,3862),(144,3861),(144,5175),(144,5176),(144,5236)]
 diretores = [(93,2420),(93,2421),(93,6129),(93,2400),(93,6130),(135,3516),(135,6131),(135,3530),(135,6132),(153,4398),(153,4412),(145,3864),(145,3866),(145,3865),(145,3910),(145,3902),(145,3907)]
 
-courses = {'Ciências':ciencias,
+courses = {'Ciencias':ciencias,
            'Biologia':biologia,
            'Sociologia':sociologia,
            'Supervisores':supervisores,
@@ -141,11 +141,22 @@ def export_grades(courses,d='notas/', sync=False):
     dstr =  '-' + moodledate.strftime('%Y-%m-%d')
     for coursename,course in courses.iteritems():
         df = frame(course)
-        df.to_csv(os.path.join(d+'/',coursename+dstr+'.csv'),index=False)
+        outfile = os.path.join(d+'/',coursename+dstr)
+        print "Writing to ", outfile
+        df.to_csv(outfile + '.csv',index=False, sep='\t')
+        try:
+            # usar xlsx ao vez de xls aqui porque tem um problema com o xlwt e utf8...
+            df.to_excel(outfile + '.xlsx', index = False)
+        except ImportError:
+            print "Faça um 'sudo pip install openpyxl' e tente novamente"            
     if sync:
         rstr = "rsync -av "+d+" atp.usp.br:/var/www/dados/redefor/"
         print rstr
         subprocess.call(rstr,shell=True)
 
 if __name__ == '__main__':
-    export_grades(courses,'/home/ewout/redefor-analises/dados/notas', sync=True)
+    import os
+    d = os.path.expanduser('~/redefor-analises/dados/notas')
+    export_grades(courses,d, sync=False)
+    print "Agora, faça um rsync -av "+d+" atp.usp.br:/var/www/dados/redefor/"
+    print "(Use rsync -av --delete se quiser remover arquivos inexistentes no diretório local do servidor remoto atp.usp.br)"
