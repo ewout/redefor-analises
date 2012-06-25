@@ -55,7 +55,9 @@ def notas(userids,gradeitem):
     notas = [nota(userid,gradeitem) for userid in userids]
     scale = scalenota(gradeitem)
     if scale:
-        return [scale(int(nota)) if nota else None for nota in notas]
+        # Usar float(scale) assume que os strings da escala são 1 e 0
+        # Isto só é válido para as presenças na escola!
+        return [float(scale(int(nota))) if nota else None for nota in notas]
     else:
         return notas
 
