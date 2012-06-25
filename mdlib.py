@@ -40,7 +40,7 @@ day0 = time.mktime((2010,10,4,0,0,0,0,0,0))
 
 prefix = "mdl_"
 
-def loaddata(query,from_cache=True, moodle='moodle_redefor'):
+def loaddata(query,from_cache=False, moodle='moodle_redefor'):
 
     if from_cache:
         queryhash = hashlib.md5(query+moodle).hexdigest()
@@ -90,24 +90,23 @@ def course2context(courseid):
 
 def courseusers(courseid):
     ''
-    query = '''SELECT u.firstname, u.lastname, u.id, la.timeaccess, c.shortname, c.fullname, u.idnumber
+    query = '''SELECT u.firstname, u.lastname, u.id, c.shortname, c.fullname, u.idnumber
     FROM mdl_course c
-    INNER JOIN mdl_context cx ON c.id = cx.instanceid
+    INNER JOIN  mdl_context cx ON c.id = cx.instanceid
     AND cx.contextlevel = '50' and c.id=%s
     INNER JOIN mdl_role_assignments ra ON cx.id = ra.contextid
     INNER JOIN mdl_role r ON ra.roleid = r.id and r.id = 5
     INNER JOIN mdl_user u ON ra.userid = u.id
-    INNER JOIN mdl_user_lastaccess la ON la.userid = u.id and la.courseid = %s order by la.timeaccess desc''' % (courseid,courseid)
+    ''' % (courseid,)
 
-    X = loaddata(query)
+    X = loaddata(query, from_cache=False)
     if X.size:
         cinfo = {'firstname': [l2u(x) for x in X[:,0]],
              'lastname': [l2u(x) for x in X[:,1]],
              'userid': [int(x) for x in X[:,2]],
-             'lastaccess': [float(x) for x in (X[:,3])],
-             'cshortname': X[:,4],
-             'cfullname': X[:,5],
-             'idnumber': [int(x) if x else '' for x in X[:,6]]}
+             'cshortname': X[:,3],
+             'cfullname': X[:,4],
+             'idnumber': [int(x) if x else '' for x in X[:,5]]}
         return cinfo
     else:
         return False
@@ -264,14 +263,14 @@ def dedica_curso(courseid):
     
 def usersbyrole(courseid, roleid=5):
     ''
-    query = '''SELECT u.firstname, u.lastname, u.id, la.timeaccess, c.shortname, c.fullname 
+    query = '''SELECT u.firstname, u.lastname, u.id, c.shortname, c.fullname 
     FROM mdl_course c
     INNER JOIN mdl_context cx ON c.id = cx.instanceid
     AND cx.contextlevel = '50' and c.id=%s
     INNER JOIN mdl_role_assignments ra ON cx.id = ra.contextid
     INNER JOIN mdl_role r ON ra.roleid = r.id and r.id = %s
     INNER JOIN mdl_user u ON ra.userid = u.id
-    INNER JOIN mdl_user_lastaccess la ON la.userid = u.id and la.courseid = %s order by la.timeaccess desc''' % (courseid,roleid,courseid)
+    ''' % (courseid,roleid)
 
     X = loaddata(query)
     cinfo = {'firstname': X[:,0],
