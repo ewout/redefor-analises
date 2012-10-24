@@ -293,7 +293,7 @@ def hist_dedica():
 	title('Geral')
 	show()
 
-def notas_fuvest(fn, gtitle="Notas", notascol = 'pontos11', curcol='curusp'):
+def notas_fuvest(fn, gtitle="Notas", notascol = 'pontos1', curcol='codcur'):
     from scipy.stats import gaussian_kde
     prova = csv2rec(fn)
     cursos = {
@@ -309,7 +309,7 @@ def notas_fuvest(fn, gtitle="Notas", notascol = 'pontos11', curcol='curusp'):
     fig.text(0.5,1,gtitle,horizontalalignment='center',verticalalignment='top')
     p = arange(0,40,0.1)
     #axt = fig.add_subplot(3,2,6)
-
+    print prova
     for i,curso in enumerate(cursos):
         notas = [x[notascol] for x in prova if x[curcol] == curso]
         notas = array(notas)*10.0/28
@@ -324,7 +324,7 @@ def notas_fuvest(fn, gtitle="Notas", notascol = 'pontos11', curcol='curusp'):
         #color = line[-1].get_color()
         ax.hist(notas,[0,1,2,3,4,5,6,7,8,9,10],normed=True,rwidth=0.9)
         ax.set_xlim(0,10)
-        ax.set_ylim(0,1)
+        ax.set_ylim(0,0.8)
         ax.xaxis.set_major_locator(MaxNLocator(5))
         ax.yaxis.set_major_locator(MaxNLocator(5))
         ax.text(0.05,0.82,cursos[curso]+u' N = '+unicode(len(notas)),transform=ax.transAxes)
@@ -382,7 +382,7 @@ def main():
 #        savefig('acoes-visu-5-10'+str(cid)+'.png')
 #    notas_fuvest('redefor2011a-1-fuvest8abr2011.csv',u'Redefor 2011-04-08, prova Módulo 1 e 2')
 #    notas_fuvest('redefor2011-prova2.csv',u'Redefor 2011-09-03, prova Módulo 3 e 4','pontos1','codcur')
-    notas_fuvest('redefor2012-prova1.csv',u'Redefor 2012-14-04, prova Módulo 1 e 2','PONTOS','codcur')
+    notas_fuvest('redefor2012-prova2.csv',u'Redefor 2012-09-27, prova Módulo 3 e 4','pontos1','codcur')
 
     show()
 

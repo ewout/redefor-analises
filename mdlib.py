@@ -7,7 +7,7 @@ import config
 import time, os, decimal
 from datetime import date
 
-cachedir = 'cache'
+cachedir = os.path.expanduser(config.cachedir)
 
 moodles = {'stoa':'moodle',
            'redefor':'moodle_redefor',
@@ -74,8 +74,11 @@ def cpf2codpes(cpf):
     salt = config.cpfsalt
     cpfhash = hashlib.md5(salt+str(cpf)).hexdigest()
     X = loaddata('select codpes from pessoa where numcpf = "%s"' % cpfhash, moodle='usp')
-    if X:
+    if len(X) == 1:
         return X[0,0]
+    elif len(X) == 2:
+        return min(X)[0]
+        
 
 def courseinfo(courseid):
     X = loaddata('select * from mdl_course where id = %s' % courseid)
