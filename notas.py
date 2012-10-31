@@ -50,16 +50,17 @@ def notas(userids,gradeitem):
     def nota (userid,gradeitem): 
         result = loaddata('select finalgrade from mdl_grade_grades where itemid = %s and userid = %s' % (gradeitem,userid),from_cache=False,moodle='moodle_redefor')
         if result:
-            return result[0,0]
+            return float(result[0,0])
 
-    notas = [nota(userid,gradeitem) for userid in userids]
+    grades = [nota(userid,gradeitem) for userid in userids]
+    grades = [round(nota,1) if nota else None for nota in grades]
     scale = scalenota(gradeitem)
     if scale:
         # Usar float(scale) assume que os strings da escala são 1 e 0
         # Isto só é válido para as presenças na escola!
-        return [float(scale(int(nota))) if nota else None for nota in notas]
+        return [float(scale(int(nota))) if nota else None for nota in grades]
     else:
-        return notas
+        return grades
 
 def frame(course):
     ''
