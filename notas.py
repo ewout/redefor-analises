@@ -87,18 +87,18 @@ def frame(course):
             # usamos um pandas.DataFrame para poder alinhar (join) as notas pelo userid facilmente        
             frame = pandas.merge(frame,thisframe, on = 'userid', how='outer')
 
-    # agora as colunas "atividade" dos ambientes
-    ambientes = [ambiente for (ambiente, gradeitem) in course]
-    #unique and sorted
-    ambientes = sorted(list(set(ambientes)))
-    for ambiente in ambientes:
-        users = courseusers(ambiente)
-        coursename = courseinfo(ambiente)['shortname']
-        if users:
-            userids = users['userid']
-            thisframe = pandas.DataFrame({'userid':userids})
-            thisframe['Atividade '+coursename] = [ativuser(userid,ambiente) for userid in userids]
-            frame = pandas.merge(frame,thisframe, on = 'userid', how='outer')
+#    # agora as colunas "atividade" dos ambientes
+#    ambientes = [ambiente for (ambiente, gradeitem) in course]
+#    #unique and sorted
+#    ambientes = sorted(list(set(ambientes)))
+#    for ambiente in ambientes:
+#        users = courseusers(ambiente)
+#        coursename = courseinfo(ambiente)['shortname']
+#        if users:
+#            userids = users['userid']
+#            thisframe = pandas.DataFrame({'userid':userids})
+#            thisframe['Atividade '+coursename] = [ativuser(userid,ambiente) for userid in userids]
+#            frame = pandas.merge(frame,thisframe, on = 'userid', how='outer')
             
 
     # remover id do moodle antes de publicar
