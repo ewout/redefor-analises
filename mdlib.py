@@ -40,7 +40,7 @@ day0 = time.mktime((2010,10,4,0,0,0,0,0,0))
 
 prefix = "mdl_"
 
-def loaddata(query,from_cache=False, moodle='moodle_redefor'):
+def loaddata(query,from_cache=False, moodle='moodle_lic2'):
 
     if from_cache:
         queryhash = hashlib.md5(query+moodle).hexdigest()
@@ -514,7 +514,7 @@ def ativtutores(courseid):
         fp.write(str(l2u(username(i)))+'\t'+str(logcount(i, courseid))+'\t'+str(logcount(i, courseid,'forum'))+'\t'+str(logcount(i,courseid,'dialogue'))+'\t'+str(logcount(i,courseid,'dialogue','add entry'))+'\n')
     fp.close()
     
-def logcount(userid=None, courseid=None, mod=None, act=None,from_cache=True,moodle='moodle_redefor'):
+def logcount(userid=None, courseid=None, mod=None, act=None,from_cache=True,moodle='moodle_lic2'):
     if userid is None:
         if courseid is None:
             if mod is None:
@@ -565,7 +565,7 @@ def logcount(userid=None, courseid=None, mod=None, act=None,from_cache=True,mood
     return loaddata(query,from_cache=from_cache,moodle=moodle)[0,0]
 
 
-def active_courses(n_actions, start = None, stop=None, moodle='moodle_redefor'):
+def active_courses(n_actions, start = None, stop=None, moodle='moodle_lic2'):
     '''Returns array of course ids with at least n_actions between start and stop.
     Start and stop are tuples of the form (year, month), for example (2010,1) for Jan. 2010'''
 
