@@ -36,7 +36,7 @@ idpp2 = [1560,1561,1564,1565,743,1571,1572,3144]
 idfreqava1 = [899,906,909,912,869,[917,922],[916,923],[916,916]]
 idfreqava2 = []
 
-day0 = time.mktime((2010,10,4,0,0,0,0,0,0))
+day0 = time.mktime((2011,10,3,0,0,0,0,0,0))
 
 prefix = "mdl_"
 
@@ -279,9 +279,8 @@ def usersbyrole(courseid, roleid=5):
     cinfo = {'firstname': X[:,0],
              'lastname': X[:,1],
              'userid': [int(x) for x in X[:,2]],
-             'lastaccess': [float(x) for x in (X[:,3])],
-             'cshortname': X[:,4],
-             'cfullname': X[:,5]}
+             'cshortname': X[:,3],
+             'cfullname': X[:,4]}
     return cinfo
     
 def usersbygroup(groupid, roleid=5):

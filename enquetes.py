@@ -15,14 +15,16 @@ import mdlib
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
-import pandas
+import pandas as pd
 from collections import Counter
 
 DATA_DIR = '/home/ewout/Dropbox/ATP/Pesquisa/Data/2011 - Cursistas/'
 
+
+
 def add_curso_e_grupo(df):
     ''
-    users = pandas.read_table(DATA_DIR+'username-course-group-redefor-11.csv',sep=',',index_col=0)
+    users = pd.read_table(DATA_DIR+'username-course-group-redefor-11.csv',sep=',',index_col=0)
     
     def find_username(username,detail):
         try:
@@ -214,7 +216,7 @@ def anonimizar(df):
 
 def convert2df(filename):
     ''
-    df = pandas.read_table(filename,sep='\t',index_col=0)
+    df = pd.read_table(filename,sep='\t',index_col=0)
     return df
 
 def deduplicar(df,field):
@@ -280,8 +282,8 @@ def joinfiles(filenames):
         if not samecolumns:    
             print "Diferent columns: trying to join horizontally"
             for i in range(1,len(dfs)):
-                #dftotal = dftotal.join(dfs[i],how='outer',lsuffix='_left')
-                dftotal = dftotal.join(dfs[i],how='inner',lsuffix='_left')
+                dftotal = dftotal.join(dfs[i],how='outer',lsuffix='_left')
+                #dftotal = dftotal.join(dfs[i],how='inner',lsuffix='_left')
 
     return dftotal
 
@@ -342,7 +344,7 @@ if __name__ == "__main__":
                       action = 'store')
 
     parser.add_option('--join', '-j',
-                      help   ='Juntar N arquivos, alignando os índices',
+                      help   =u'Juntar N arquivos, alignando os índices',
                       action = 'store_true')
 
 
