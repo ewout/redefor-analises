@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from pylab import *
-from mdlib import *	
+from mdlib import *
 import pandas
 
 #xls = pandas.ExcelFile('/home/ewout/Dropbox/ATP/Administrativo/Redefor-2011-SEE.xls')
@@ -46,8 +46,8 @@ def notas(userids,gradeitem):
                 scale = result[0,0].split(',')
                 return lambda x: scale[x-1]
 
-        
-    def nota (userid,gradeitem): 
+
+    def nota (userid,gradeitem):
         result = loaddata('select finalgrade from mdl_grade_grades where itemid = %s and userid = %s' % (gradeitem,userid),from_cache=False,moodle='moodle_redefor')
         if result:
             return float(result[0,0])
@@ -77,14 +77,14 @@ def frame(course):
                 frame = thisframe
                 frame['Nome AVA'] = users['firstname']
                 frame['Sobrenome AVA'] = users['lastname']
-            
+
                 frame['Número USP'] = users['idnumber']
                 frame['Nome Apolo'] = [pessoa(codpes)['nompes'] if codpes else '' for codpes in users['idnumber']]
                 frame[gradename] = grades
                 first = False
                 continue
             thisframe[gradename] = grades
-            # usamos um pandas.DataFrame para poder alinhar (join) as notas pelo userid facilmente        
+            # usamos um pandas.DataFrame para poder alinhar (join) as notas pelo userid facilmente
             frame = pandas.merge(frame,thisframe, on = 'userid', how='outer')
 
 #    # agora as colunas "atividade" dos ambientes
@@ -99,10 +99,10 @@ def frame(course):
 #            thisframe = pandas.DataFrame({'userid':userids})
 #            thisframe['Atividade '+coursename] = [ativuser(userid,ambiente) for userid in userids]
 #            frame = pandas.merge(frame,thisframe, on = 'userid', how='outer')
-            
+
 
     # remover id do moodle antes de publicar
-    del frame['userid'] 
+    del frame['userid']
     return frame
 
 def moodle_date():
@@ -151,7 +151,7 @@ def export_grades(courses,d='notas/', sync=False):
             # usar xlsx ao vez de xls aqui porque tem um problema com o xlwt e utf8...
             df.to_excel(outfile + '.xlsx', index = False)
         except ImportError:
-            print "Faça um 'sudo pip install openpyxl' e tente novamente"            
+            print "Faça um 'sudo pip install openpyxl' e tente novamente"
     if sync:
         rstr = "rsync -av "+d+" atp.usp.br:/var/www/dados/redefor/"
         print rstr
@@ -159,7 +159,9 @@ def export_grades(courses,d='notas/', sync=False):
 
 if __name__ == '__main__':
     import os
-    d = os.path.expanduser('~/redefor-analises/dados/notas')
+    d = os.path.expanduser('~/Dropbox/redefor-analises/dados/notas')
+    if not os.path.exists(d):
+        d = os.path.expanduser('~/redefor-analises/dados/notas')
     export_grades(courses,d, sync=False)
     print "Agora, faça um rsync -av "+d+" atp.usp.br:/var/www/dados/redefor/"
     print "(Use rsync -av --delete se quiser remover arquivos inexistentes no diretório local do servidor remoto atp.usp.br)"
