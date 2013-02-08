@@ -90,6 +90,9 @@ def frame(course):
             
                 frame['Número USP'] = users['idnumber']
                 frame['Nome Apolo'] = [pessoa(codpes)['nompes'] if codpes else '' for codpes in users['idnumber']]
+                frame['Email'] = users['email']
+                frame['Tel1'] = users['phone1']
+                frame['Tel2'] = users['phone2']
                 frame[gradename] = grades
                 first = False
                 continue

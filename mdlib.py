@@ -90,7 +90,7 @@ def course2context(courseid):
 
 def courseusers(courseid):
     ''
-    query = '''SELECT u.firstname, u.lastname, u.id, c.shortname, c.fullname, u.idnumber
+    query = '''SELECT u.firstname, u.lastname, u.id, c.shortname, c.fullname, u.idnumber, u.email, u.phone1, u.phone2
     FROM mdl_course c
     INNER JOIN  mdl_context cx ON c.id = cx.instanceid
     AND cx.contextlevel = '50' and c.id=%s
@@ -106,7 +106,10 @@ def courseusers(courseid):
              'userid': [int(x) for x in X[:,2]],
              'cshortname': X[:,3],
              'cfullname': X[:,4],
-             'idnumber': [int(x) if x else '' for x in X[:,5]]}
+             'idnumber': [int(x) if x else '' for x in X[:,5]],
+             'email': [l2u(x) for x in X[:,6]],
+             'phone1': [l2u(x) for x in X[:,7]],
+             'phone2': [l2u(x) for x in X[:,8]]}
         return cinfo
     else:
         return False
