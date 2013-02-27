@@ -6,6 +6,7 @@ import hashlib
 import config
 import time, os, decimal
 from datetime import date
+import pandas as pd
 
 cachedir = os.path.expanduser(config.cachedir)
 
@@ -40,7 +41,7 @@ day0 = time.mktime((2011,10,3,0,0,0,0,0,0))
 
 prefix = "mdl_"
 
-def loaddata(query,from_cache=False, moodle='moodle_redefor'):
+def loaddata(query,from_cache=False, moodle='moodle_redefor',df=False):
 
     if from_cache:
         queryhash = hashlib.md5(query+moodle).hexdigest()
@@ -56,7 +57,13 @@ def loaddata(query,from_cache=False, moodle='moodle_redefor'):
     if from_cache:
         fpath = os.path.join(cachedir,queryhash + ".npy")
         np.save(fpath,array(results))
-    return array(results)
+    if df:
+        field_names = [i[0] for i in c.description]
+        df = pd.DataFrame(array(results),columns=field_names)
+        df = df.applymap(l2u)
+        return df
+    else:
+        return array(results)
 
 
 def pessoa(nusp):
@@ -78,7 +85,12 @@ def cpf2codpes(cpf):
         return X[0,0]
     elif len(X) == 2:
         return min(X)[0]
-        
+
+
+def idnumber(userid):
+    ''
+    return loaddata("select idnumber from mdl_user where id = %s" % str(userid))[0,0]
+
 
 def courseinfo(courseid):
     X = loaddata('select * from mdl_course where id = %s' % courseid)
@@ -116,7 +128,7 @@ def courseusers(courseid):
         return cinfo
     else:
         return False
-    
+
 def lastaccess(courseid=None):
     'usuários com lastaccess < t vs t'
 
@@ -137,7 +149,7 @@ def lastaccess(courseid=None):
 
 
 def week_where(startweek = 1, endweek = 10,timeexpr = 'timemodified'):
-    
+
     start = day0 + (startweek-1)*3600*24*7
     end = start + (endweek)*3600*24*7
     return '%s between %s and %s' % (timeexpr,start,end)
@@ -149,7 +161,7 @@ def dedica(inativ = 30, userid = 2, startweek = 1, endweek = 10, courseid = 14):
 
     query = 'select time from mdl_log where '
     query += week_where(startweek, endweek, 'time')
-    query += 'and course = %s ' % courseid 
+    query += 'and course = %s ' % courseid
     query += 'and userid = %s order by time asc' % userid
     X = list(loaddata(query))
 
@@ -173,11 +185,11 @@ def dedica(inativ = 30, userid = 2, startweek = 1, endweek = 10, courseid = 14):
 
 
 def notas_curso(courseid):
-    
+
     queryid = 'SELECT id FROM mdl_grade_items where itemtype = "course" and courseid = %s' % courseid
     id = loaddata(queryid)
     itemid = id[0,0]
-    
+
 #    query = 'select finalgrade, userid from mdl_grade_grades where itemid = %s order by userid asc' % itemid
     ''
     query = '''SELECT g.finalgrade, usr.id
@@ -207,12 +219,12 @@ def notas_grupo(courseid):
     #encontrando o id do item da nota final do curso
     queryid = 'SELECT id FROM mdl_grade_items where itemtype = "course" and courseid = %s' % courseid
     id = loaddata(queryid)
-    itemid = id[0,0] 
+    itemid = id[0,0]
 
     q1 = 'SELECT id FROM mdl_groups WHERE courseid = %s order by id asc'% courseid
     groupids = loaddata(q1) #array com os ids de todos os grupos do
 
-    medias = []            
+    medias = []
     if groupids.any(): #verifica se ha grupos no curso
         for g in groupids[:,0]: # repete para cada grupo
             q2 = 'SELECT userid FROM mdl_groups_members where groupid=%s' % g
@@ -229,22 +241,22 @@ def notas_grupo(courseid):
                             notas.append(float(nota[0,0])) #senao adiciona a nota aa lista de notas do grupo
                     else:
                         notas.append(0) # se o usuario nao tem nenhuma nota atribuida adiciona zero na lista de notas do grupo
-                medias.append(mean(notas)) 
+                medias.append(mean(notas))
             else:
                 medias.append(0)
-                
+
     return medias #retorna uma lista com as medias de notas finais dos grupos ordenado pelo id do grupo
-        
-        
+
+
 def dedica_grupo(courseid):
 
     q1 = 'SELECT id FROM mdl_groups WHERE courseid = %s order by id asc'% courseid
     groupids = loaddata(q1) #array com os ids de todos os grupos do
-    
+
     if groupids.any():
         t = []
         for g in groupids[:,0]:
-        
+
             q2 = 'SELECT userid FROM mdl_groups_members where groupid=%s' % g
             userids = loaddata(q2) #tomando os ids de usuarios do grupo
             tempos = []
@@ -254,8 +266,8 @@ def dedica_grupo(courseid):
                 tmedio = mean(tempos)
             t.append(tmedio)
     return t
-    
-    
+
+
 def dedica_curso(courseid):
 
 #    ids = courseusers(courseid)["userid"]
@@ -266,10 +278,10 @@ def dedica_curso(courseid):
         for u in ids:
             tempos.append(dedica(30, u, 1, 10, courseid))
     return tempos
-    
+
 def usersbyrole(courseid, roleid=5):
     ''
-    query = '''SELECT u.firstname, u.lastname, u.id, c.shortname, c.fullname 
+    query = '''SELECT u.firstname, u.lastname, u.id, c.shortname, c.fullname
     FROM mdl_course c
     INNER JOIN mdl_context cx ON c.id = cx.instanceid
     AND cx.contextlevel = '50' and c.id=%s
@@ -285,32 +297,32 @@ def usersbyrole(courseid, roleid=5):
              'cshortname': X[:,3],
              'cfullname': X[:,4]}
     return cinfo
-    
+
 def usersbygroup(groupid, roleid=5):
 
     query = '''select gm.userid from mdl_groups_members gm where groupid = %s and gm.userid in (select ra.userid from mdl_role_assignments ra where roleid = %s)''' % (groupid, roleid)
-        
+
     X = loaddata(query)
     if X.any():
         notas = X[:,0]
         userids = [int(x) for x in X[:,0]]
     else:
         userids = []
-            
+
     return userids
-    
-    
+
+
 def ativuser(userid, courseid):
-    
+
     query = '''select count(*) from mdl_log where userid = %s and course = %s''' % (userid, courseid)
     a = loaddata(query)[0,0]
-    
+
     return a
 
-    
+
 def infoaluno(courseid, saida=recarray):
-     
-    nusp = []    
+
+    nusp = []
     grupo = []
     ativ = []
     desist = []
@@ -322,7 +334,7 @@ def infoaluno(courseid, saida=recarray):
     freqava2 = []
     i = courseids1.index(courseid)
     c = courseid
-    
+
     q1 = '''select id from mdl_groups where courseid = %s;''' % c
     grupos = list(loaddata(q1)[:,0])
     if grupos <> []:
@@ -337,13 +349,13 @@ def infoaluno(courseid, saida=recarray):
                         nusp.append(n[0,0])
                     else:
                         nusp.append(0)
-                    
+
                     #Grupo
                     grupo.append(loaddata('''select name from mdl_groups where id = %s''' % g)[0,0])
-                    
+
                     #Atividade (num. de itens no mdl_log)
                     ativ.append(ativuser(u, c))
-                    
+
                     #Desistente
                     la = loaddata('''select from_unixtime(lastaccess) from mdl_user where id = %s''' % u)[0,0]
                     delta = date.today() - la.date()
@@ -356,12 +368,12 @@ def infoaluno(courseid, saida=recarray):
                         tutor.append(1)
                     else:
                         tutor.append(0)
-                    
+
                     #Nota AVA
-                    
+
                     if type(idnotava1[i]) == list:
                         n1 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idnotava1[i][0],u))
-                        if n1.any():    
+                        if n1.any():
                             notava1.append(n1[0,0])
                         else:
                             notava1.append('')
@@ -379,30 +391,30 @@ def infoaluno(courseid, saida=recarray):
                         else:
                             notava1.append('')
                         notava2.append('')
-                    
+
                     #Nota da prova presencial
                     q = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idpp1[i],u))
                     if q.any():
                         notapp.append(q[0,0])
                     else:
                         notapp.append('')
-                        
+
                     #Frequencia
                     try:
                         if type(idfreqava1[i]) == list:
-                        
+
                             f1 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idfreqava1[i][0],u))
-                            if f1.any():    
+                            if f1.any():
                                 freqava1.append(f1[0,0])
                             else:
                                 freqava1.append('')
-                                
+
                                 f2 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idfreqava1[i][1],u))
                                 if f2.any():
                                     freqava2.append(f2[0,0])
                                 else:
                                     freqava2.append('')
-                                    
+
                         else:
                             f1 = loaddata('''select finalgrade from mdl_grade_grades where itemid = %s and userid = %s''' % (idfreqava1[i],u))
                             if f1.any():
@@ -412,7 +424,7 @@ def infoaluno(courseid, saida=recarray):
                             freqava2.append('')
                     except:
                         pass
-                    
+
     nusp = array(nusp)
     grupo = array(grupo)
     ativ = array(ativ)
@@ -423,17 +435,17 @@ def infoaluno(courseid, saida=recarray):
     notapp = array(notapp)
     freqava1 = array(freqava1)
     freqava2 = array(freqava2)
-    
+
     reg = rec.fromarrays([nusp,grupo,ativ,desist,tutor,notava1,notava2,notapp,freqava1,freqava2], names = 'NumUSP, Grupo, Atividade, Desistente, Tutor, NotaAVA1, NotaAVA2, Prova Presencial,Frequencia AVA 1,Frequencia AVA 2')
     outfile = 'csv/InfoAluno-'+courseinfo(c)['shortname']+'.csv'
     if saida == recarray:
         return reg
-    else:        
+    else:
         rec2csv(reg, outfile)
-        
+
 def infogrupo(courseid,saida=recarray):
-    
-   
+
+
     nomegrupo = []
     ativtutor = []
     ativalunos = []
@@ -459,7 +471,7 @@ def infogrupo(courseid,saida=recarray):
                 ativtutor.append(sum(at))
             else:
                 ativtutor.append('')
-            
+
             #Atividade dos alunos
             alunos = usersbygroup(g)
             if alunos:
@@ -469,7 +481,7 @@ def infogrupo(courseid,saida=recarray):
                 ativalunos.append(mean(aa))
             else:
                 ativalunos.append('')
-            
+
             #Fracao desistente
             if alunos:
                 desist = []
@@ -483,31 +495,34 @@ def infogrupo(courseid,saida=recarray):
                 fracdesist.append(mean(desist))
             else:
                 fracdesist.append('')
-                    
+
     nomegrupo = array(nomegrupo)
     ativtutor = array(ativtutor)
     ativalunos = array(ativalunos)
     fracdesist = array(fracdesist)
-    
+
     reg = rec.fromarrays([nomegrupo, ativtutor, ativalunos, fracdesist], names = 'Grupo, Atividade do tutor, Atividade media dos alunos, Fracao desistente')
     outfile = 'csv/InfoGrupo-'+courseinfo(c)['shortname']+'.csv'
     if saida == recarray:
         return reg
     else:
         rec2csv(reg, outfile)
-        
-        
+
+
 def username(userid):
 
     query = 'select firstname, lastname from mdl_user where id = %s' % userid
     X = loaddata(query)
     return X[0,0]+' '+X[0,1]
-        
-        
+
+
 def l2u(s):
     'converte string latin1 em utf8'
-    return s.decode('latin1').encode('utf8')
-     
+    if hasattr(s,'decode'):
+        return s.decode('latin1').encode('utf8')
+    else:
+        return s
+
 def ativtutores(courseid):
 
     ids = usersbyrole(courseid, 4)['userid']
@@ -518,7 +533,7 @@ def ativtutores(courseid):
     for i in ids:
         fp.write(str(l2u(username(i)))+'\t'+str(logcount(i, courseid))+'\t'+str(logcount(i, courseid,'forum'))+'\t'+str(logcount(i,courseid,'dialogue'))+'\t'+str(logcount(i,courseid,'dialogue','add entry'))+'\n')
     fp.close()
-    
+
 def logcount(userid=None, courseid=None, mod=None, act=None,from_cache=True,moodle='moodle_redefor'):
     if userid is None:
         if courseid is None:
@@ -543,7 +558,7 @@ def logcount(userid=None, courseid=None, mod=None, act=None,from_cache=True,mood
                     w = '''where course = %s and module = "%s"''' %(courseid, mod)
                 else:
                     w = '''where course = %s and module = "%s" and action="%s"''' %(courseid, mod, act)
-    else:        
+    else:
         if courseid is None:
             if mod is None:
                 if act is None:
@@ -589,13 +604,13 @@ def active_courses(n_actions, start = None, stop=None, moodle='moodle_redefor'):
         return X[:,0]
     else:
         return array([])
-    
+
 
 def course_frame(start, stop):
-    '''Generates dataframe of course indicators from mdl_log 
+    '''Generates dataframe of course indicators from mdl_log
 
     Start and stop are tuples of the form (year, month), for example (2010,1) for Jan. 2010'''
-    
+
     # courses with at least 10 actions in the time period
     ids = active_courses(10, start, stop)
 
@@ -620,16 +635,16 @@ def course_frame(start, stop):
         resource_views = logcount(courseid=id, mod='resource', act='view')
         resource_updates = logcount(courseid=id, mod='resource', act='update')
         resource_adds = logcount(courseid=id, mod='resource', act='add')
-        
+
         df.append((id,forum_adds,forum_views,forum_posts,assignment_views,assignment_uploads,assignment_adds,course_views,quiz_views,quiz_adds,quiz_attempts,resource_views,resource_updates,resource_adds))
-        
+
     df = rec.fromrecords(df,names=('courseid','forum_adds','forum_views','forum_posts','assignment_views','assignment_uploads','assignment_adds','course_views','quiz_views','quiz_adds','quiz_attempts','resource_views','resource_updates','resource_adds'))
 
     return df
 
 def quiz_attempts(quizid,time='start'):
     'Returns list of datetime times in ascending order. time ={start,finish,modified}'
-    
+
     query = 'select from_unixtime(time%s) from mdl_quiz_attempts where quiz = %i order by time%s asc' % (time,quizid,time)
     X = loaddata(query)
     return X[:,0]
@@ -643,7 +658,7 @@ def logs_per_day(moodle='moodle'):
 def quiz_attempts_hour_before_deadline():
     '-- Number of quiz submissions by hour before deadline'
     query = """
-SELECT 
+SELECT
     (quiz.timeclose - qa.timefinish) / 3600 AS hoursbefore,
     COUNT(1)
 
@@ -668,7 +683,7 @@ ORDER BY
 
 def quiz_attempts_hourofday():
     'Number of quiz submissions by hour of day'
-    query = """SELECT 
+    query = """SELECT
     hour(from_unixtime(timefinish)) hour,
     COUNT(1)
 
